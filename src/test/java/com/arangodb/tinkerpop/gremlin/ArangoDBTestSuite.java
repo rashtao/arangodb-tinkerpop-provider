@@ -4,7 +4,7 @@ import org.apache.tinkerpop.gremlin.AbstractGremlinSuite;
 import org.apache.tinkerpop.gremlin.algorithm.generator.CommunityGeneratorTest;
 import org.apache.tinkerpop.gremlin.algorithm.generator.DistributionGeneratorTest;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalEngine;
-import org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest;
+import org.apache.tinkerpop.gremlin.structure.VertexTest;
 import org.apache.tinkerpop.gremlin.structure.EdgeTest;
 import org.apache.tinkerpop.gremlin.structure.FeatureSupportTest;
 import org.apache.tinkerpop.gremlin.structure.GraphConstructionTest;
@@ -33,7 +33,6 @@ import org.apache.tinkerpop.gremlin.structure.util.star.StarGraphTest;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.RunnerBuilder;
 
-import com.arangodb.tinkerpop.gremlin.structure.ArangoDBStructureCheck;
 
 /**
  * Run with {@code GREMLIN_TESTS} environment variable set to a list of any of these to enable
@@ -90,7 +89,6 @@ public class ArangoDBTestSuite extends AbstractGremlinSuite {
         StarGraphTest.class,
         TransactionTest.class,
         VertexTest.class,
-    	ArangoDBStructureCheck.class,
          //ArangoDBIndexCheck.class,
          //ArangoDBCypherCheck.class,
     };

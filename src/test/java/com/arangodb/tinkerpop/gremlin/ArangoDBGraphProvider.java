@@ -16,6 +16,7 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 
 import com.arangodb.tinkerpop.gremlin.client.ArangoDBGraphClient;
 import com.arangodb.tinkerpop.gremlin.utils.ArangoDBConfigurationBuilder;
+import org.apache.tinkerpop.gremlin.structure.VertexTest;
 
 /**
  * The Class ArangoDBGraphProvider. This provider assumes that there is a local ArangoDB running (i.e.
@@ -58,8 +59,11 @@ public class ArangoDBGraphProvider extends AbstractGraphProvider {
 		Class<?> test,
 		String testMethodName,
 		GraphData loadGraphWith) {
-		ArangoDBConfigurationBuilder builder = new ArangoDBConfigurationBuilder();
-		builder.graph(graphName);
+		ArangoDBConfigurationBuilder builder = new ArangoDBConfigurationBuilder()
+				.arangoHosts("127.0.0.1:8529")
+				.arangoUser("root")
+				.arangoPassword("test")
+				.graph(graphName);
 		if (loadGraphWith != null) {
 			switch(loadGraphWith) {
 			case CLASSIC:
@@ -85,6 +89,7 @@ public class ArangoDBGraphProvider extends AbstractGraphProvider {
 				break;
 			case MODERN:
 				System.out.println("MODERN");
+				builder.withVertexCollection("dog");
 				builder.withVertexCollection("software");
 				builder.withVertexCollection("person");
 				builder.withEdgeCollection("knows");
@@ -134,12 +139,31 @@ public class ArangoDBGraphProvider extends AbstractGraphProvider {
 			else if(testMethodName.startsWith("shouldReadWriteDetachedVertexNoEdges")) {
 				builder.withEdgeCollection("friends");
 			}
+			else if (testMethodName.startsWith("shouldReadWriteDetachedEdge")) {
+				builder.withVertexCollection("person");
+				builder.withEdgeCollection("friend");
+			}
+			else if (testMethodName.startsWith("shouldReadWriteDetachedEdgeAsReference")) {
+				builder.withVertexCollection("person");
+				builder.withEdgeCollection("friend");
+			}
+			else if (testMethodName.startsWith("shouldReadWriteEdge")) {
+				builder.withVertexCollection("person");
+				builder.withEdgeCollection("friend");
+			}
+			else if (testMethodName.startsWith("shouldThrowOnGraphEdgeSetPropertyStandard")) {
+				builder.withEdgeCollection("self");
+			}
+			else if (testMethodName.startsWith("shouldThrowOnGraphAddEdge")) {
+				builder.withEdgeCollection("self");
+			}
 			else {
 				// Perhaps change for startsWith, but then it would be more verbose. Perhaps a set?
 				switch (testMethodName) {
 				case "shouldGetPropertyKeysOnEdge":
 				case "shouldNotGetConcurrentModificationException":
 					builder.withEdgeCollection("friend");
+					builder.withEdgeCollection("knows");
 					break;
 				case "shouldTraverseInOutFromVertexWithMultipleEdgeLabelFilter":
 				case "shouldTraverseInOutFromVertexWithSingleEdgeLabelFilter":
@@ -166,6 +190,8 @@ public class ArangoDBGraphProvider extends AbstractGraphProvider {
 				case "shouldHaveTruncatedStringRepresentationForEdgeProperty":
 				case "shouldValidateIdEquality":
 				case "shouldValidateEquality":
+				case "shouldHaveExceptionConsistencyWhenAssigningSameIdOnEdge":
+				case "shouldAddEdgeWithUserSuppliedStringId":
 					builder.withEdgeCollection("self");
 					break;
 				case "shouldAllowRemovalFromEdgeWhenAlreadyRemoved":
@@ -194,6 +220,43 @@ public class ArangoDBGraphProvider extends AbstractGraphProvider {
 				case "shouldReadLegacyGraphSON":
 					builder.withEdgeCollection("knows");
 					builder.withEdgeCollection("created");
+					break;
+				case "shouldAddVertexWithLabel":
+					builder.withVertexCollection("person");
+					break;
+				case "shouldNotAllowSetProperty":
+				case "shouldHashAndEqualCorrectly":
+				case "shouldNotAllowRemove":
+				case "shouldNotConstructNewWithSomethingAlreadyDetached":
+				case "shouldNotConstructNewWithSomethingAlreadyReferenced":
+					builder.withEdgeCollection("test");
+					break;
+				case "shouldHaveExceptionConsistencyWhenUsingNullVertex":
+					builder.withEdgeCollection("tonothing");
+					break;
+				case "shouldHandleSelfLoops":
+					builder.withVertexCollection("person");
+					builder.withEdgeCollection("self");
+					break;
+				case "shouldAttachWithCreateMethod":
+				case "testAttachableCreateMethod":
+					builder.withVertexCollection("person");
+					builder.withVertexCollection("project");
+					builder.withEdgeCollection("knows");
+					builder.withEdgeCollection("developedBy");
+					builder.configureEdge("knows", "person", "person");
+					builder.configureEdge("developedBy", "project", "person");
+					break;
+				case "shouldConstructReferenceVertex":
+					builder.withVertexCollection("blah");
+					break;
+				case "shouldHaveExceptionConsistencyWhenUsingSystemVertexLabel":
+				case "shouldHaveExceptionConsistencyWhenUsingEmptyVertexLabel":
+				case "shouldHaveExceptionConsistencyWhenUsingEmptyVertexLabelOnOverload":
+				case "shouldHaveExceptionConsistencyWhenUsingSystemVertexLabelOnOverload":
+					if (VertexTest.class.equals(test.getEnclosingClass())) {
+						builder.withVertexCollection("foo");
+					}
 					break;
 				default:
 					System.out.println("case \"" + testMethodName + "\":");

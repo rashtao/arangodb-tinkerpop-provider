@@ -23,7 +23,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<arangodb-java-driver.version>5.0.0</arangodb-java-driver.version>
+		<arangodb-java-driver.version>7.17.0</arangodb-java-driver.version>
 		<tinkerpop.version>3.3.11</tinkerpop.version>
 		<junit.version>4.13.1</junit.version>
 		<logback-classic.version>1.1.3</logback-classic.version>
@@ -205,12 +205,6 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.0.0-M3</version>
-        <configuration>
-          <environmentVariables>
-			<!-- Needs to be provided in a single line -->
-            <GREMLIN_TESTS>org.apache.tinkerpop.gremlin.algorithm.generator.CommunityGeneratorTest,org.apache.tinkerpop.gremlin.algorithm.generator.DistributionGeneratorTest,org.apache.tinkerpop.gremlin.structure.EdgeTest,org.apache.tinkerpop.gremlin.structure.FeatureSupportTest,org.apache.tinkerpop.gremlin.structure.GraphConstructionTest,org.apache.tinkerpop.gremlin.structure.GraphTest,org.apache.tinkerpop.gremlin.structure.io.IoCustomTest,org.apache.tinkerpop.gremlin.structure.io.IoGraphTest,org.apache.tinkerpop.gremlin.structure.io.IoPropertyTest,org.apache.tinkerpop.gremlin.structure.io.IoTest,org.apache.tinkerpop.gremlin.structure.io.IoVertexTest,org.apache.tinkerpop.gremlin.structure.PropertyTest,org.apache.tinkerpop.gremlin.structure.VariablesTest,org.apache.tinkerpop.gremlin.structure.VertexPropertyTest</GREMLIN_TESTS>
-          </environmentVariables>
-        </configuration>
       </plugin>
 
 			<plugin>
