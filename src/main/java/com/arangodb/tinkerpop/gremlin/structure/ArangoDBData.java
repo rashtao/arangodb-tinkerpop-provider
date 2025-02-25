@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-abstract class ArangoDBData<T> {
+public abstract class ArangoDBData<T> {
     private String label;
 
     @InternalKey

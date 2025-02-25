@@ -21,84 +21,70 @@ package com.arangodb.tinkerpop.gremlin.structure;
 import org.apache.tinkerpop.gremlin.structure.*;
 import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
+import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.arangodb.tinkerpop.gremlin.utils.ArangoDBUtil.elementAlreadyRemoved;
+import static com.arangodb.tinkerpop.gremlin.utils.ArangoDBUtil.*;
 
 
-public class ArangoDBEdge implements Edge {
+public class ArangoDBEdge extends ArangoDBElement<ArangoDBEdgeData> implements Edge {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ArangoDBEdge.class);
 
-    private final ArangoDBGraph graph;
-    private final ArangoDBEdgeData data;
-    private boolean removed;
-
     public ArangoDBEdge(ArangoDBGraph graph, ArangoDBEdgeData data) {
-        this.graph = graph;
-        this.data = data;
-        this.removed = false;
+        super(graph, data);
     }
 
     public ArangoDBEdge(final String id, final String label, final String outVertexId, final String inVertexId, ArangoDBGraph graph) {
-        this.graph = graph;
-        String inferredLabel, key;
-        if (id != null) {
-            int separator = id.indexOf('/');
-            if (separator > 0) {
-                inferredLabel = id.substring(0, separator);
-                key = id.substring(separator + 1);
-            } else {
-                inferredLabel = label != null ? label : DEFAULT_LABEL;
-                key = id;
-            }
-        } else {
-            inferredLabel = label != null ? label : DEFAULT_LABEL;
-            key = null;
-        }
-
-        data = new ArangoDBEdgeData(inferredLabel, key, outVertexId, inVertexId);
-        removed = false;
+        this(graph, new ArangoDBEdgeData(extractLabel(id, label).orElse(DEFAULT_LABEL), extractKey(id), outVertexId, inVertexId));
     }
 
     @Override
-    public String id() {
-        String key = data.getKey();
-        if (key == null) {
-            return null;
-        }
-        return graph.getPrefixedCollectioName(label()) + "/" + key;
+    public <V> Property<V> property(final String key, final V value) {
+        if (removed) throw elementAlreadyRemoved(Edge.class, id());
+        LOGGER.trace("set property {} = {}", key, value);
+        ElementHelper.validateProperty(key, value);
+        data.setProperty(key, value);
+        update();
+        return new ArangoDBProperty<>(this, key, value);
     }
 
     @Override
-    public String label() {
-        return data.getLabel();
+    public void remove() {
+        LOGGER.trace("removing edge {} from graph {}.", id(), graph.name());
+        graph.getClient().deleteEdge(data);
+        this.removed = true;
     }
 
     @Override
-    public ArangoDBGraph graph() {
-        return graph;
+    public String toString() {
+        return StringFactory.edgeString(this);
     }
 
-    public void insert() {
-        if (removed) throw elementAlreadyRemoved(Edge.class, id());
-        graph.getClient().insertEdge(data);
+    @Override
+    public Vertex outVertex() {
+        return new ArangoDBVertex(graph, graph.getClient().readVertex(data.getFrom()));
     }
 
-    public void update() {
-        if (removed) throw elementAlreadyRemoved(Edge.class, id());
-        graph.getClient().updateEdge(data);
+    @Override
+    public Vertex inVertex() {
+        return new ArangoDBVertex(graph, graph.getClient().readVertex(data.getTo()));
     }
 
-    public void removeProperty(String key) {
-        if (removed) throw elementAlreadyRemoved(Edge.class, id());
-        if (data.hasProperty(key)) {
-            data.removeProperty(key);
-            update();
+    @Override
+    public Iterator<Vertex> vertices(final Direction direction) {
+        if (removed) return Collections.emptyIterator();
+        switch (direction) {
+            case OUT:
+                return IteratorUtils.of(this.outVertex());
+            case IN:
+                return IteratorUtils.of(this.inVertex());
+            default:
+                return IteratorUtils.of(this.outVertex(), this.inVertex());
         }
     }
 
@@ -111,78 +97,22 @@ public class ArangoDBEdge implements Edge {
                 .collect(Collectors.toList()).iterator();
     }
 
-    @Override
-    public <V> Property<V> property(final String key, final V value) {
+    public void insert() {
         if (removed) throw elementAlreadyRemoved(Edge.class, id());
-        LOGGER.info("set property {} = {}", key, value);
-        ElementHelper.validateProperty(key, value);
-        data.setProperty(key, value);
-        update();
-        return new ArangoDBProperty<>(this, key, value);
+        graph.getClient().insertEdge(data);
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public <V> Property<V> property(final String key) {
+    public void removeProperty(String key) {
+        if (removed) throw elementAlreadyRemoved(Edge.class, id());
         if (data.hasProperty(key)) {
-            Object value = data.getProperty(key);
-            return new ArangoDBProperty<>(this, key, (V) value);
+            data.removeProperty(key);
+            update();
         }
-        return Property.empty();
     }
 
-    @Override
-    public Set<String> keys() {
-        return data.getProperties().keySet();
-    }
-
-    @Override
-    public void remove() {
-        LOGGER.info("removing {} from graph {}.", id(), graph.name());
-        graph.getClient().deleteEdge(data);
-        this.removed = true;
-    }
-
-    @Override
-    public <V> Iterator<V> values(String... propertyKeys) {
-        return Edge.super.values(propertyKeys);
-    }
-
-    @Override
-    public String toString() {
-        return StringFactory.edgeString(this);
-    }
-
-    @Override
-    public Iterator<Vertex> vertices(Direction direction) {
-        if (removed) return Collections.emptyIterator();
-        List<String> ids = new ArrayList<>();
-        switch (direction) {
-            case BOTH:
-                ids.add(data.getFrom());
-                ids.add(data.getTo());
-                break;
-            case IN:
-                ids.add(data.getTo());
-                break;
-            case OUT:
-                ids.add(data.getFrom());
-                break;
-        }
-        return graph.getClient().getGraphVertices(ids, Collections.emptyList()).stream()
-                .map(it -> (Vertex) new ArangoDBVertex(graph, it))
-                .iterator();
-    }
-
-    @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
-    @Override
-    public boolean equals(final Object object) {
-        return ElementHelper.areEqual(this, object);
-    }
-
-    @Override
-    public int hashCode() {
-        return ElementHelper.hashCode(this);
+    public void update() {
+        if (removed) throw elementAlreadyRemoved(Edge.class, id());
+        graph.getClient().updateEdge(data);
     }
 
 }

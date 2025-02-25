@@ -56,7 +56,7 @@ public class ArangoDBVertexProperty<V> implements Element, VertexProperty<V> {
     @Override
     public <W> Property<W> property(String key, W value) {
         if (removed) throw elementAlreadyRemoved(VertexProperty.class, id());
-        LOGGER.info("set property {} = {}", key, value);
+        LOGGER.trace("set property {} = {}", key, value);
         ElementHelper.validateProperty(key, value);
         data.setProperty(key, value);
         vertex.update();
@@ -67,7 +67,6 @@ public class ArangoDBVertexProperty<V> implements Element, VertexProperty<V> {
     public void remove() {
         if (removed) return;
         vertex.removeProperty(data);
-        vertex.update();
         removed = true;
     }
 
