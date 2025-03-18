@@ -18,8 +18,6 @@ import com.arangodb.config.ArangoConfigProperties;
 import com.arangodb.entity.*;
 import com.arangodb.model.*;
 import com.arangodb.tinkerpop.gremlin.persistence.*;
-import com.arangodb.tinkerpop.gremlin.structure.ArangoDBEdge;
-import com.arangodb.tinkerpop.gremlin.structure.ArangoDBVertex;
 import com.arangodb.tinkerpop.gremlin.structure.*;
 import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalInterruptedException;
 import org.apache.tinkerpop.gremlin.structure.Direction;
@@ -54,7 +52,7 @@ public class ArangoDBGraphClient {
          * The error code regex. Matches response messages from the ArangoDB client
          */
 
-        public static Pattern ERROR_CODE = Pattern.compile("^Response:\\s\\d+,\\sError:\\s(\\d+)\\s-\\s([a-z\\s]+).+");
+        public static final Pattern ERROR_CODE = Pattern.compile("^Response:\\s\\d+,\\sError:\\s(\\d+)\\s-\\s([a-z\\s]+).+");
 
         /**
          * Instantiation happens via factory method

@@ -78,6 +78,7 @@ public class EdgeData extends SimplePropertyData implements PersistentData {
         return from;
     }
 
+    @SuppressWarnings("unused")
     public void setFrom(ArangoDBId from) {
         this.from = from;
     }
@@ -86,6 +87,7 @@ public class EdgeData extends SimplePropertyData implements PersistentData {
         return to;
     }
 
+    @SuppressWarnings("unused")
     public void setTo(ArangoDBId to) {
         this.to = to;
     }
