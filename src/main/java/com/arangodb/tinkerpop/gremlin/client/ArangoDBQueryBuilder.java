@@ -27,11 +27,11 @@ public class ArangoDBQueryBuilder {
 	
 	private static final Logger logger = LoggerFactory.getLogger(ArangoDBQueryBuilder.class);
 	
-	private StringBuilder queryBuilder;
+	private final StringBuilder queryBuilder;
 	
 	private int iterateCnt = 1;
 
-	private boolean filtered = false;
+	private final boolean filtered = false;
 
 	/**
 	 * Direction to navigate for vertex paths.
@@ -99,7 +99,7 @@ public class ArangoDBQueryBuilder {
 			bindVars.put(varName, c);
 		}
 		queryBuilder.append("\n");
-		logger.debug("with", queryBuilder.toString());
+		logger.debug("with", queryBuilder);
 		return this;
 	}
 	
@@ -122,7 +122,7 @@ public class ArangoDBQueryBuilder {
 		queryBuilder.append(String.format("FOR %s IN docs\n", loopVariable));
 		queryBuilder.append(String.format("  FILTER NOT IS_NULL(%s)\n", loopVariable)); // Not needed?
 		bindVars.put("ids", ids);
-		logger.debug("documentsById: {}", queryBuilder.toString());
+		logger.debug("documentsById: {}", queryBuilder);
 		return this;
 	}
 	
@@ -151,7 +151,7 @@ public class ArangoDBQueryBuilder {
 		}
 		queryBuilder.append("  )\n");
 		queryBuilder.append(")\n");
-		logger.debug("union", queryBuilder.toString());
+		logger.debug("union", queryBuilder);
 		return this;
 	}
 	
@@ -170,7 +170,7 @@ public class ArangoDBQueryBuilder {
 		String collectionName, Map<String, Object> bindVars) {
 		queryBuilder.append(String.format("FOR %1$s IN @@col%2$s", loopVariable, iterateCnt)).append("\n");
 		bindVars.put(String.format("@col%s", iterateCnt++), collectionName);
-		logger.debug("iterateCollection", queryBuilder.toString());
+		logger.debug("iterateCollection", queryBuilder);
 		return this;
 	}
 	
@@ -184,7 +184,7 @@ public class ArangoDBQueryBuilder {
 	
 	public ArangoDBQueryBuilder ret(String returnStatement) {
 		queryBuilder.append("RETURN ").append(returnStatement).append("\n");
-		logger.debug("ret", queryBuilder.toString());
+		logger.debug("ret", queryBuilder);
 		return this;
 	}
 	

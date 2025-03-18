@@ -114,12 +114,9 @@ public class ArangoDBGraphVariables extends ArangoDBBaseDocument implements Grap
 			return false;
 		ArangoDBGraphVariables other = (ArangoDBGraphVariables) obj;
 		if (store == null) {
-			if (other.store != null)
-				return false;
-		} else if (!store.equals(other.store))
-			return false;
-		return true;
-	}
+            return other.store == null;
+		} else return store.equals(other.store);
+    }
 
 	@Override
 	public String toString() {

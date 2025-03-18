@@ -98,16 +98,16 @@ public class ArangoDBConfigurationBuilder {
 	private LoadBalancingStrategy strategy;
 	
 	/** The edges. */
-	private Set<String> edges = new HashSet<>();
+	private final Set<String> edges = new HashSet<>();
 	
 	/** The vertices. */
-	private Set<String> vertices = new HashSet<>();
+	private final Set<String> vertices = new HashSet<>();
 	
 	/** The relations. */
-	private Set<Triple<String, Set<String>, Set<String>>> relations = new HashSet<>();
+	private final Set<Triple<String, Set<String>, Set<String>>> relations = new HashSet<>();
 	
 	/** The hosts. */
-	private Set<String> hosts = new HashSet<>();
+	private final Set<String> hosts = new HashSet<>();
 
 	/** If Collection Names should be prefixed with Graph name. **/
 	private Boolean shouldPrefixCollectionNames = true;
