@@ -65,9 +65,9 @@ public class ArangoDBPropertyFilter {
 		
 		/** The not in. */
 		NOT_IN
-	};
+	}
 
-	/** The Constant PROPERTY. */
+    /** The Constant PROPERTY. */
 	
 	private static final String PROPERTY = "property";
 	
@@ -82,7 +82,7 @@ public class ArangoDBPropertyFilter {
 
 	/** The property containers. */
 	
-	private List<PropertyContainer> propertyContainers = new ArrayList<PropertyContainer>();
+	private final List<PropertyContainer> propertyContainers = new ArrayList<PropertyContainer>();
 
 	/**
 	 * Adds a new "has" filter and returns the object. This is a fluent method that allows 
