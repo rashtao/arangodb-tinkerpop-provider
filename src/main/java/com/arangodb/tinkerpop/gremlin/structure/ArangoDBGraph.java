@@ -441,8 +441,8 @@ public class ArangoDBGraph implements Graph {
         GraphCreateOptions options = new GraphCreateOptions();
         // FIXME Cant be in orphan collections because it will be deleted with graph?
         // options.orphanCollections(GRAPH_VARIABLES_COLLECTION);
-        final List<String> prefVCols = vertexCollections.stream().map(this::getPrefixedCollectioName).collect(Collectors.toList());
-        final List<String> prefECols = edgeCollections.stream().map(this::getPrefixedCollectioName).collect(Collectors.toList());
+        final List<String> prefVCols = vertexCollections.stream().map(this::getPrefixedCollectionName).collect(Collectors.toList());
+        final List<String> prefECols = edgeCollections.stream().map(this::getPrefixedCollectionName).collect(Collectors.toList());
         final List<EdgeDefinition> edgeDefinitions = new ArrayList<>();
         if (relations.isEmpty()) {
             logger.info("No relations, creating default ones.");
@@ -489,8 +489,8 @@ public class ArangoDBGraph implements Graph {
     public Vertex addVertex(Object... keyValues) {
         ElementHelper.legalPropertyKeyValueArray(keyValues);
         String label = ElementHelper.getLabelValue(keyValues).orElse(null);
-        String id = ArangoDBUtil.getId(features().vertex(), label, keyValues);
-        ArangoDBVertex vertex = ArangoDBVertex.of(id, label, this);
+        ArangoDBId id = createId(features().vertex(), label, Vertex.DEFAULT_LABEL, keyValues);
+        ArangoDBVertex vertex = ArangoDBVertex.of(id, this);
         if (!vertexCollections().contains(vertex.label())) {
             throw new IllegalArgumentException(String.format("Vertex label (%s) not in graph (%s) vertex collections.", vertex.label(), name));
         }
@@ -567,14 +567,14 @@ public class ArangoDBGraph implements Graph {
 
     @Override
     public Iterator<Edge> edges(Object... edgeIds) {
-        return getClient().getGraphEdges(getIdValues(edgeIds)).stream()
+        return getClient().getGraphEdges(getIdValues(Edge.DEFAULT_LABEL, edgeIds)).stream()
                 .map(it -> (Edge) new ArangoDBEdge(this, it))
                 .iterator();
     }
 
     @Override
     public Iterator<Vertex> vertices(Object... vertexIds) {
-        return getClient().getGraphVertices(getIdValues(vertexIds)).stream()
+        return getClient().getGraphVertices(getIdValues(Vertex.DEFAULT_LABEL, vertexIds)).stream()
                 .map(it -> (Vertex) new ArangoDBVertex(this, it))
                 .iterator();
     }
@@ -646,21 +646,19 @@ public class ArangoDBGraph implements Graph {
      * @param collectionName the collection name
      * @return the Collection name prefixed
      */
-    public String getPrefixedCollectioName(String collectionName) {
-        if (GRAPH_VARIABLES_COLLECTION.equals(collectionName)) {
+    public String getPrefixedCollectionName(String collectionName) {
+        if (!shouldPrefixCollectionNames) {
             return collectionName;
         }
-        if (GRAPH_COLLECTIONS.contains(collectionName)) {
-            return String.format("%s_%s", name, collectionName);
-        }
-        if (shouldPrefixCollectionNames) {
-            if (collectionName.startsWith(name + "_")) {
-                return collectionName;
-            }
-            return String.format("%s_%s", name, collectionName);
-        } else {
+
+        if (collectionName.startsWith(name + "_")) {
             return collectionName;
         }
+        return name + "_" + collectionName;
+    }
+
+    public ArangoDBId getArangoDBId(ArangoDBId id) {
+        return ArangoDBId.of(name, id.getLabel(), id.getKey());
     }
 
     @Override
@@ -692,133 +690,69 @@ public class ArangoDBGraph implements Graph {
         return relations;
     }
 
-    private String getIdValue(Object id) {
+    private ArangoDBId getIdValue(String defaultLabel, Object id) {
         if (id instanceof String) {
-            return (String) id;
+            return ArangoDBId.parseWithDefaultLabel(name, defaultLabel, (String) id);
         } else if (id instanceof Element) {
-            return getIdValue(((Element) id).id());
+            return getIdValue(defaultLabel, ((Element) id).id());
         } else {
             throw unsupportedIdType(id);
         }
     }
 
-    private List<String> getIdValues(Object[] edgeIds) {
-        return Arrays.stream(edgeIds)
-                .map(this::getIdValue)
+    private List<ArangoDBId> getIdValues(String defaultLabel, Object[] ids) {
+        return Arrays.stream(ids)
+                .map(it -> getIdValue(defaultLabel, it))
                 .collect(Collectors.toList());
     }
 
+    private String extractKey(final String id) {
+        if (id == null) {
+            return null;
+        }
+        int separator = id.indexOf('/');
+        if (separator > 0) {
+            return id.substring(separator + 1);
+        } else {
+            return id;
+        }
+    }
 
-    // TODO Decide which of these methods we want to keep
+    private String extractCollection(final String id) {
+        if (id == null) {
+            return null;
+        }
+        int separator = id.indexOf('/');
+        if (separator > 0) {
+            return id.substring(0, separator);
+        } else {
+            return null;
+        }
+    }
 
-//	@Override
-//	public <T extends Element> void dropKeyIndex(String name, Class<T> elementClass) {
-//
-//		List<ArangoDBIndex> indices = null;
-//		try {
-//			if (elementClass.isAssignableFrom(Vertex.class)) {
-//				indices = client.getVertexIndices(simpleGraph);
-//			} else if (elementClass.isAssignableFrom(Edge.class)) {
-//				indices = client.getEdgeIndices(simpleGraph);
-//			}
-//		} catch (ArangoDBException e) {
-//			logger.warn("error while reading an index", e);
-//		}
-//
-//		String normalizedKey = ArangoDBUtil.normalizeKey(name);
-//
-//		if (indices != null) {
-//			for (ArangoDBIndex index : indices) {
-//				if (index.getFields().size() == 1) {
-//					deleteIndexByKey(normalizedKey, index);
-//				}
-//			}
-//		}
-//
-//	}
-//
-//	private void deleteIndexByKey(String normalizedKey, ArangoDBIndex index) {
-//		String field = index.getFields().get(0);
-//
-//		if (field.equals(normalizedKey)) {
-//			try {
-//				client.deleteIndex(index.getId());
-//			} catch (ArangoDBException e) {
-//				logger.warn("error while deleting an index", e);
-//			}
-//		}
-//	}
-//
-//	@SuppressWarnings("rawtypes")
-//	@Override
-//	public <T extends Element> void createKeyIndex(String name, Class<T> elementClass, Parameter... indexParameters) {
-//
-//		IndexType type = IndexType.SKIPLIST;
-//		boolean unique = false;
-//		List<String> fields = new ArrayList<String>();
-//
-//		String n = ArangoDBUtil.normalizeKey(name);
-//		fields.add(n);
-//
-//		for (Parameter p : indexParameters) {
-//			if ("type".equals(p.getKey())) {
-//				type = object2IndexType(p.getValue());
-//			}
-//			if ("unique".equals(p.getKey())) {
-//				unique = (Boolean) p.getValue();
-//			}
-//		}
-//
-//		try {
-//			if (elementClass.isAssignableFrom(Vertex.class)) {
-//				getClient().createVertexIndex(simpleGraph, type, unique, fields);
-//			} else if (elementClass.isAssignableFrom(Edge.class)) {
-//				getClient().createEdgeIndex(simpleGraph, type, unique, fields);
-//			}
-//		} catch (ArangoDBException e) {
-//			logger.warn("error while creating a vertex index", e);
-//		}
-//	}
+    private String extractLabel(final String collection, final String label) {
+        if (collection != null) {
+            if (label != null && !label.equals(collection)) {
+                throw new IllegalArgumentException("Mismatching label: [" + label + "] and collection: [" + collection + "]");
+            }
+            return collection;
+        } else {
+            return label;
+        }
+    }
 
-//	private IndexType object2IndexType(Object obj) {
-//		if (obj instanceof IndexType) {
-//			return (IndexType) obj;
-//		}
-//
-//		if (obj != null) {
-//			String str = obj.toString();
-//			for (IndexType indexType : IndexType.values()) {
-//				if (indexType.toString().equalsIgnoreCase(str)) {
-//					return indexType;
-//				}
-//			}
-//		}
-//
-//		return IndexType.SKIPLIST;
-//	}
-
-//	@Override
-//	public <T extends Element> Set<String> getIndexedKeys(Class<T> elementClass) {
-//		HashSet<String> result = new HashSet<String>();
-//		List<ArangoDBIndex> indices = null;
-//		try {
-//			if (elementClass.isAssignableFrom(Vertex.class)) {
-//				indices = client.getVertexIndices(simpleGraph);
-//			} else if (elementClass.isAssignableFrom(Edge.class)) {
-//				indices = client.getEdgeIndices(simpleGraph);
-//			}
-//
-//			for (ArangoDBIndex i : indices) {
-//				if (i.getFields().size() == 1) {
-//					addNotSystemKey(result, i);
-//				}
-//			}
-//
-//		} catch (ArangoDBException e) {
-//			logger.warn("error while reading index keys", e);
-//		}
-//
-//		return result;
-//	}
+    public ArangoDBId createId(Graph.Features.ElementFeatures features, String label, String defaultLabel, Object... keyValues) {
+        Optional<Object> optionalId = ElementHelper.getIdValue(keyValues);
+        if (!optionalId.isPresent()) {
+            return ArangoDBId.of(name, Optional.ofNullable(label).orElse(defaultLabel), null);
+        }
+        String id = optionalId
+                .filter(features::willAllowId)
+                .map(Object::toString)
+                .orElseThrow(Vertex.Exceptions::userSuppliedIdsOfThisTypeNotSupported);
+        String l = Optional.ofNullable(extractLabel(extractCollection(id), label)).orElse(defaultLabel);
+        ElementHelper.validateLabel(l);
+        return ArangoDBId.of(name, l, extractKey(id));
+    }
 
 }

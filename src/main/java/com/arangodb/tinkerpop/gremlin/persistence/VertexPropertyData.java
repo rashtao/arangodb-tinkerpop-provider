@@ -54,6 +54,7 @@ public class VertexPropertyData extends SimplePropertyData {
         return ArangoDBUtil.getCorretctPrimitive(value, valueType);
     }
 
+    @SuppressWarnings("unused")
     public String getValueType() {
         return valueType;
     }

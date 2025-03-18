@@ -82,10 +82,6 @@ public class StructureGraphProvider extends BaseGraphProvider {
                     builder.withEdgeCollection("test2");
                     builder.withEdgeCollection("test3");
                     break;
-                case "shouldEvaluateConnectivityPatterns":
-                    builder.withEdgeCollection("knows");
-                    builder.withEdgeCollection("hates");
-                    break;
                 case "shouldRemoveEdgesWithoutConcurrentModificationException":
                     builder.withEdgeCollection("link");
                     break;
@@ -95,7 +91,6 @@ public class StructureGraphProvider extends BaseGraphProvider {
                 case "shouldValidateIdEquality":
                 case "shouldValidateEquality":
                 case "shouldHaveExceptionConsistencyWhenAssigningSameIdOnEdge":
-                case "shouldAddEdgeWithUserSuppliedStringId":
                 case "shouldAllowNullAddEdge":
                     builder.withEdgeCollection("self");
                     break;
