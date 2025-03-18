@@ -95,6 +95,7 @@ public class ArangoDBVertexProperty<P> extends ArangoDBSimpleElement<VertexPrope
     }
 
     @Override
+    @SuppressWarnings("EmptyMethod")
     public String label() {
         return VertexProperty.super.label();
     }
