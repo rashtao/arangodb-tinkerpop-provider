@@ -488,8 +488,8 @@ public class ArangoDBGraph implements Graph {
     @Override
     public Vertex addVertex(Object... keyValues) {
         ElementHelper.legalPropertyKeyValueArray(keyValues);
-        String label = ElementHelper.getLabelValue(keyValues).orElse(Vertex.DEFAULT_LABEL);
-        ArangoDBId id = createId(features().vertex(), label, keyValues);
+        String label = ElementHelper.getLabelValue(keyValues).orElse(null);
+        ArangoDBId id = createId(features().vertex(), label, Vertex.DEFAULT_LABEL, keyValues);
         ArangoDBVertex vertex = ArangoDBVertex.of(id, this);
         if (!vertexCollections().contains(vertex.label())) {
             throw new IllegalArgumentException(String.format("Vertex label (%s) not in graph (%s) vertex collections.", vertex.label(), name));
@@ -706,7 +706,7 @@ public class ArangoDBGraph implements Graph {
                 .collect(Collectors.toList());
     }
 
-    private  String extractKey(final String id) {
+    private String extractKey(final String id) {
         if (id == null) {
             return null;
         }
@@ -718,7 +718,7 @@ public class ArangoDBGraph implements Graph {
         }
     }
 
-    private  String extractCollection(final String id) {
+    private String extractCollection(final String id) {
         if (id == null) {
             return null;
         }
@@ -730,7 +730,7 @@ public class ArangoDBGraph implements Graph {
         }
     }
 
-    private  String extractLabel(final String collection, final String label) {
+    private String extractLabel(final String collection, final String label) {
         if (collection != null) {
             if (label != null && !label.equals(collection)) {
                 throw new IllegalArgumentException("Mismatching label: [" + label + "] and collection: [" + collection + "]");
@@ -741,17 +741,18 @@ public class ArangoDBGraph implements Graph {
         }
     }
 
-    public  ArangoDBId createId(Graph.Features.ElementFeatures features, String label, Object... keyValues) {
-        ElementHelper.validateLabel(label);
+    public ArangoDBId createId(Graph.Features.ElementFeatures features, String label, String defaultLabel, Object... keyValues) {
         Optional<Object> optionalId = ElementHelper.getIdValue(keyValues);
         if (!optionalId.isPresent()) {
-            return ArangoDBId.of(name, label, null);
+            return ArangoDBId.of(name, Optional.ofNullable(label).orElse(defaultLabel), null);
         }
         String id = optionalId
                 .filter(features::willAllowId)
                 .map(Object::toString)
                 .orElseThrow(Vertex.Exceptions::userSuppliedIdsOfThisTypeNotSupported);
-        return ArangoDBId.of(name, extractLabel(extractCollection(id), label), extractKey(id));
+        String l = Optional.ofNullable(extractLabel(extractCollection(id), label)).orElse(defaultLabel);
+        ElementHelper.validateLabel(l);
+        return ArangoDBId.of(name, l, extractKey(id));
     }
 
     // TODO Decide which of these methods we want to keep

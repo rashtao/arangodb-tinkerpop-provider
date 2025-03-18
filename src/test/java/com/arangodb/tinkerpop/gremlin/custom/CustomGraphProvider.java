@@ -53,6 +53,13 @@ public class CustomGraphProvider extends BaseGraphProvider {
                 builder.configureEdge("knows", "person", "person");
                 builder.configureEdge("created", "person", "software");
                 break;
+            case "shouldEvaluateConnectivityPatterns":
+                builder.withEdgeCollection("knows");
+                builder.withEdgeCollection("hates");
+                break;
+            case "shouldAddEdgeWithUserSuppliedStringId":
+                builder.withEdgeCollection("self");
+                break;
         }
     }
 }

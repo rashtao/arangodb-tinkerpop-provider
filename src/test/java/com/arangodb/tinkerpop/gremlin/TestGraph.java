@@ -13,7 +13,7 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.structure.GraphTest",
         method = "shouldAddVertexWithUserSuppliedStringId",
-        reason = "FIXME: DE-996")
+        reason = "replaced by com.arangodb.tinkerpop.gremlin.custom.structure.GraphTest#shouldAddVertexWithUserSuppliedStringId()")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.structure.GraphTest",
         method = "shouldRemoveVertices",
@@ -25,7 +25,7 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.structure.GraphTest",
         method = "shouldEvaluateConnectivityPatterns",
-        reason = "FIXME: DE-996")
+        reason = "replaced by com.arangodb.tinkerpop.gremlin.custom.structure.GraphTest#shouldEvaluateConnectivityPatterns()")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.structure.util.star.StarGraphTest",
         method = "shouldAttachWithCreateMethod",
@@ -35,46 +35,25 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
         method = "shouldCopyFromGraphAToGraphB",
         reason = "replaced by com.arangodb.tinkerpop.gremlin.custom.structure.util.star.StarGraphTest.shouldCopyFromGraphAToGraphB")
 @Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.structure.VertexTest$BasicVertexTest",
-        method = "shouldEvaluateEquivalentVertexHashCodeWithSuppliedIds",
-        reason = "FIXME: DE-996")
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.structure.VertexTest$BasicVertexTest",
-        method = "shouldEvaluateVerticesEquivalentWithSuppliedIdsViaTraversal",
-        reason = "FIXME: DE-996")
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.structure.VertexTest$BasicVertexTest",
-        method = "shouldEvaluateVerticesEquivalentWithSuppliedIdsViaIterators",
-        reason = "FIXME: DE-996")
-@Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.structure.VertexTest$AddEdgeTest",
         method = "shouldAddEdgeWithUserSuppliedStringId",
-        reason = "FIXME: DE-996")
+        reason = "replaced by com.arangodb.tinkerpop.gremlin.custom.structure.VertexTest.AddEdgeTest#shouldAddEdgeWithUserSuppliedStringId()")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MergeEdgeTest$Traversals",
         method = "*",
-        reason = "replaced by com.arangodb.tinkerpop.gremlin.custom.process.traversal.step.map.MergeEdgeTest"
-)
+        reason = "replaced by com.arangodb.tinkerpop.gremlin.custom.process.traversal.step.map.MergeEdgeTest")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MergeVertexTest$Traversals",
         method = "g_withSideEffectXc_label_person_name_markoX_withSideEffectXm_age_19X_mergeVXselectXcXX_optionXonMatch_selectXmXX_option",
-        reason = "FIXME: DE-995"
-)
+        reason = "FIXME: DE-995")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MergeVertexTest$Traversals",
         method = "g_mergeVXlabel_person_name_markoX_optionXonMatch_age_19X_option",
-        reason = "FIXME: DE-995"
-)
+        reason = "FIXME: DE-995")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.OrderabilityTest$Traversals",
         method = "*",
-        reason = "replaced by com.arangodb.tinkerpop.gremlin.custom.process.traversal.step.OrderabilityTest"
-)
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.SubgraphTest$Traversals",
-        method = "*",
-        reason = "FIXME: DE-996"
-)
+        reason = "replaced by com.arangodb.tinkerpop.gremlin.custom.process.traversal.step.OrderabilityTest")
 public class TestGraph extends ArangoDBGraph {
 
     @SuppressWarnings("unused")

@@ -39,7 +39,7 @@ public class VertexData implements PropertyData<VertexPropertyData>, PersistentD
     private String key;
 
     @JsonProperty
-    private final Map<String, Set<VertexPropertyData>> properties = new HashMap<>();
+    private final Map<String, List<VertexPropertyData>> properties = new HashMap<>();
 
     public VertexData() {
     }
@@ -75,11 +75,11 @@ public class VertexData implements PropertyData<VertexPropertyData>, PersistentD
 
     @Override
     public void add(String key, VertexPropertyData value) {
-        properties.computeIfAbsent(key, k -> new HashSet<>()).add(value);
+        properties.computeIfAbsent(key, k -> new ArrayList<>()).add(value);
     }
 
     public void remove(String key, VertexPropertyData value) {
-        Set<VertexPropertyData> props = properties.getOrDefault(key, Collections.emptySet());
+        List<VertexPropertyData> props = properties.getOrDefault(key, Collections.emptyList());
         props.remove(value);
         if (props.isEmpty()) {
             properties.remove(key);
