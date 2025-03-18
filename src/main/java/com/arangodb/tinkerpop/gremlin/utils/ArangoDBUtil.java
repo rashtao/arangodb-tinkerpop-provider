@@ -84,14 +84,14 @@ public class ArangoDBUtil {
         }
         List<String> trimmed = Arrays.stream(info[0].split(","))
                 .map(String::trim)
-                .map(c -> graph.getPrefixedCollectionName(c))
+                .map(graph::getPrefixedCollectionName)
                 .collect(Collectors.toList());
         String[] from = new String[trimmed.size()];
         from = trimmed.toArray(from);
 
         trimmed = Arrays.stream(info[1].split(","))
                 .map(String::trim)
-                .map(c -> graph.getPrefixedCollectionName(c))
+                .map(graph::getPrefixedCollectionName)
                 .collect(Collectors.toList());
         String[] to = new String[trimmed.size()];
         to = trimmed.toArray(to);
@@ -180,13 +180,11 @@ public class ArangoDBUtil {
         }
         Map<String, EdgeDefinition> eds = requiredDefinitions.stream().collect(Collectors.toMap(EdgeDefinition::getCollection, ed -> ed));
 
-        Iterator<EdgeDefinition> it = graphEdgeDefinitions.iterator();
-        while (it.hasNext()) {
-            EdgeDefinition existing = it.next();
+        for (EdgeDefinition existing : graphEdgeDefinitions) {
             if (eds.containsKey(existing.getCollection())) {
                 EdgeDefinition requiredEdgeDefinition = eds.remove(existing.getCollection());
-                HashSet<String> existingSet = new HashSet<String>(existing.getFrom());
-                HashSet<String> requiredSet = new HashSet<String>(requiredEdgeDefinition.getFrom());
+                HashSet<String> existingSet = new HashSet<>(existing.getFrom());
+                HashSet<String> requiredSet = new HashSet<>(requiredEdgeDefinition.getFrom());
                 if (!existingSet.equals(requiredSet)) {
                     throw new ArangoDBGraphException(String.format("The from collections dont match for edge definition %s", existing.getCollection()));
                 }
@@ -244,12 +242,11 @@ public class ArangoDBUtil {
         final List<String> from = new ArrayList<>(vertexCollections);
         from.addAll(edgeCollections);
         from.add(graph.getPrefixedCollectionName(ArangoDBGraph.ELEMENT_PROPERTIES_COLLECTION));
-        String[] f = from.toArray(new String[from.size()]);
-        EdgeDefinition ed = new EdgeDefinition()
+        String[] f = from.toArray(new String[0]);
+        return new EdgeDefinition()
                 .collection(graph.getPrefixedCollectionName(ArangoDBGraph.ELEMENT_PROPERTIES_EDGE_COLLECTION))
                 .from(f)
                 .to(graph.getPrefixedCollectionName(ArangoDBGraph.ELEMENT_PROPERTIES_COLLECTION));
-        return ed;
     }
 
     /**
@@ -273,7 +270,7 @@ public class ArangoDBUtil {
                 } else if (value instanceof Integer) {
                     return ((Integer) value).floatValue();
                 } else {
-                    logger.debug("Add conversion for " + value.getClass().getName() + " to " + valueClass);
+                    logger.debug("Add conversion for {} to {}", value.getClass().getName(), valueClass);
                 }
                 break;
             }
@@ -285,7 +282,7 @@ public class ArangoDBUtil {
                 } else if (value instanceof Integer) {
                     return ((Integer) value).doubleValue();
                 } else {
-                    logger.debug("Add conversion for " + value.getClass().getName() + " to " + valueClass);
+                    logger.debug("Add conversion for {} to {}", value.getClass().getName(), valueClass);
                 }
                 break;
             }
@@ -297,7 +294,7 @@ public class ArangoDBUtil {
                 } else if (value instanceof Integer) {
                     return ((Integer) value).longValue();
                 } else {
-                    logger.debug("Add conversion for " + value.getClass().getName() + " to " + valueClass);
+                    logger.debug("Add conversion for {} to {}", value.getClass().getName(), valueClass);
                 }
                 break;
             }
@@ -396,7 +393,7 @@ public class ArangoDBUtil {
                 } catch (IllegalArgumentException | ClassNotFoundException e1) {
                     logger.warn("Type not deserializable", e1);
                 }
-                logger.debug("Add conversion for " + value.getClass().getName() + " to " + valueClass);
+                logger.debug("Add conversion for {} to {}", value.getClass().getName(), valueClass);
         }
         return value;
     }

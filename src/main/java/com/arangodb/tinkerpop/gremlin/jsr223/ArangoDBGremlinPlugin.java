@@ -9,7 +9,6 @@
 package com.arangodb.tinkerpop.gremlin.jsr223;
 
 import com.arangodb.tinkerpop.gremlin.persistence.*;
-import com.arangodb.tinkerpop.gremlin.structure.ArangoDBEdge;
 import org.apache.tinkerpop.gremlin.jsr223.AbstractGremlinPlugin;
 import org.apache.tinkerpop.gremlin.jsr223.DefaultImportCustomizer;
 import org.apache.tinkerpop.gremlin.jsr223.ImportCustomizer;

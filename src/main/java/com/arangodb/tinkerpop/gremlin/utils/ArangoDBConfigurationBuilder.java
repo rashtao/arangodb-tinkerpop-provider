@@ -13,7 +13,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.apache.commons.configuration2.BaseConfiguration;
 import org.apache.commons.configuration2.convert.LegacyListDelimiterHandler;
@@ -140,30 +139,30 @@ public class ArangoDBConfigurationBuilder {
 			StringBuilder rVal = new StringBuilder();
 			rVal.append(r.getLeft());
 			if (!edges.contains(r.getLeft())) {
-				logger.warn("Missing edege collection {} from relations added to edge collections");
+				logger.warn("Missing edege collection {} from relations added to edge collections", r.getLeft());
 				edges.add(r.getLeft());
 			}
 			rVal.append(":");
 			for (String sv : r.getMiddle()) {
 				if (!vertices.contains(sv)) {
-					logger.warn("Missing vertex collection {} from relations added to vertex collections");
+					logger.warn("Missing vertex collection {} from relations added to vertex collections", sv);
 					vertices.add(r.getLeft());
 				}
 			}
-			rVal.append(r.getMiddle().stream().collect(Collectors.joining(",")));
+			rVal.append(String.join(",", r.getMiddle()));
 			rVal.append("->");
 			for (String sv : r.getRight()) {
 				if (!vertices.contains(sv)) {
-					logger.warn("Missing vertex collection {} from relations added to vertex collections");
+					logger.warn("Missing vertex collection {} from relations added to vertex collections", sv);
 					vertices.add(r.getLeft());
 				}
 			}
-			rVal.append(r.getRight().stream().collect(Collectors.joining(",")));
+			rVal.append(String.join(",", r.getRight()));
 			rels.add(rVal.toString());
 			
 		}
 		if (!rels.isEmpty()) {
-			config.addProperty(fullPropertyKey(ArangoDBGraph.PROPERTY_KEY_RELATIONS), rels.stream().collect(Collectors.joining("/")));
+			config.addProperty(fullPropertyKey(ArangoDBGraph.PROPERTY_KEY_RELATIONS), String.join("/", rels));
 		}
 		config.addProperty(fullPropertyKey(PROPERTY_KEY_USER), user);
 		config.addProperty(fullPropertyKey(PROPERTY_KEY_PASSWORD), password);
@@ -192,7 +191,7 @@ public class ArangoDBConfigurationBuilder {
 			config.addProperty(fullPropertyKey(PROPERTY_KEY_LOAD_BALANCING_STRATEGY), strategy.name());
 		}
 		if (!hosts.isEmpty()) {
-			config.addProperty(fullPropertyKey(PROPERTY_KEY_HOSTS), hosts.stream().collect(Collectors.joining(",")));
+			config.addProperty(fullPropertyKey(PROPERTY_KEY_HOSTS), String.join(",", hosts));
 		}
 		if(shouldPrefixCollectionNames != null){
 			config.addProperty(fullPropertyKey(ArangoDBGraph.PROPERTY_KEY_SHOULD_PREFIX_COLLECTION_NAMES), shouldPrefixCollectionNames);
