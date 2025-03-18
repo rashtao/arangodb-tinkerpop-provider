@@ -18,6 +18,7 @@
  */
 package com.arangodb.tinkerpop.gremlin.custom.structure.util.detached;
 
+import com.arangodb.tinkerpop.gremlin.custom.structure.util.star.StarGraph;
 import org.apache.tinkerpop.gremlin.AbstractGremlinTest;
 import org.apache.tinkerpop.gremlin.FeatureRequirement;
 import org.apache.tinkerpop.gremlin.TestHelper;
@@ -30,8 +31,6 @@ import org.apache.tinkerpop.gremlin.structure.util.Attachable;
 import org.apache.tinkerpop.gremlin.structure.util.detached.DetachedEdge;
 import org.apache.tinkerpop.gremlin.structure.util.detached.DetachedFactory;
 import org.apache.tinkerpop.gremlin.structure.util.detached.DetachedVertex;
-import org.apache.tinkerpop.gremlin.structure.util.star.StarGraph;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Random;
@@ -42,7 +41,6 @@ import java.util.UUID;
  */
 public class DetachedGraphTest extends AbstractGremlinTest {
 
-    @Ignore("FIXME: numeric vertex properties ids")
     @Test
     @FeatureRequirement(featureClass = Graph.Features.VertexFeatures.class, feature = Graph.Features.VertexFeatures.FEATURE_USER_SUPPLIED_IDS)
     @FeatureRequirement(featureClass = Graph.Features.VertexFeatures.class, feature = Graph.Features.VertexPropertyFeatures.FEATURE_USER_SUPPLIED_IDS)
@@ -61,8 +59,8 @@ public class DetachedGraphTest extends AbstractGremlinTest {
         Vertex starVertex = starGraph.addVertex(T.id, id, T.label, label, "name", "stephen", "name", "spmallete");
         starVertex.property("acl", true, "timestamp", random.nextLong(), "creator", "marko");
         for (int i = 0; i < 100; i++) {
-            starVertex.addEdge("knows", starGraph.addVertex("person", "name", new UUID(random.nextLong(), random.nextLong()), "since", random.nextLong()));
-            starGraph.addVertex(T.label, "project").addEdge("developedBy", starVertex, "public", random.nextBoolean());
+            starVertex.addEdge("knows", starGraph.addVertex(T.id, "person/" + UUID.randomUUID(), T.label, "person", "name", new UUID(random.nextLong(), random.nextLong()), "since", random.nextLong()), T.id, "knows/" + UUID.randomUUID());
+            starGraph.addVertex(T.id, "project/" + UUID.randomUUID(), T.label, "project").addEdge("developedBy", starVertex, T.id, "developedBy/" + UUID.randomUUID(), "public", random.nextBoolean());
         }
         final DetachedVertex detachedVertex = DetachedFactory.detach(starGraph.getStarVertex(), true);
         final Vertex createdVertex = detachedVertex.attach(Attachable.Method.create(graph));

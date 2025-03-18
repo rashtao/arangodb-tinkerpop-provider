@@ -68,7 +68,7 @@ public class ArangoDBVertex extends ArangoDBElement<VertexPropertyData, VertexDa
         data.add(key, prop);
 
         ArangoDBVertexProperty<V> vertexProperty = new ArangoDBVertexProperty<>(key, prop, this);
-        // TODO: optmize writing only once
+        // TODO: optimize writing only once
         ElementHelper.attachProperties(vertexProperty, keyValues);
         doUpdate();
         return vertexProperty;
@@ -81,7 +81,7 @@ public class ArangoDBVertex extends ArangoDBElement<VertexPropertyData, VertexDa
 
         ElementHelper.legalPropertyKeyValueArray(keyValues);
         ElementHelper.validateLabel(label);
-        ArangoDBId id = graph.createId(graph.features().edge(), label, keyValues);
+        ArangoDBId id = graph.createId(graph.features().edge(), label, Edge.DEFAULT_LABEL, keyValues);
         ArangoDBId outVertexId = ArangoDBId.parse(graph.name(), id());
         ArangoDBId inVertexId = ArangoDBId.parse(graph.name(), (String) vertex.id());
         ArangoDBEdge edge = ArangoDBEdge.of(id, outVertexId, inVertexId, graph);

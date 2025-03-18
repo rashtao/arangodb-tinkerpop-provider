@@ -130,6 +130,7 @@ public abstract class OrderabilityTest extends AbstractGremlinProcessTest {
         ), traversal);
     }
 
+
     /**
      * Order by edge property (orders by key, then value).
      */
