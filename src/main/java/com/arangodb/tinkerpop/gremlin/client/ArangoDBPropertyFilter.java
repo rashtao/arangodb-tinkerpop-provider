@@ -9,7 +9,6 @@
 package com.arangodb.tinkerpop.gremlin.client;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -65,9 +64,9 @@ public class ArangoDBPropertyFilter {
 		
 		/** The not in. */
 		NOT_IN
-	};
+	}
 
-	/** The Constant PROPERTY. */
+    /** The Constant PROPERTY. */
 	
 	private static final String PROPERTY = "property";
 	
@@ -82,7 +81,7 @@ public class ArangoDBPropertyFilter {
 
 	/** The property containers. */
 	
-	private List<PropertyContainer> propertyContainers = new ArrayList<PropertyContainer>();
+	private final List<PropertyContainer> propertyContainers = new ArrayList<>();
 
 	/**
 	 * Adds a new "has" filter and returns the object. This is a fluent method that allows 
@@ -176,15 +175,14 @@ public class ArangoDBPropertyFilter {
 	
 	private String addArray(Map<String, Object> bindVars, String propertyName, Object value) {
 		int c = 0;
-		List<String> elements = new ArrayList<String>();
+		List<String> elements = new ArrayList<>();
 		if (value instanceof Iterable) {
 			Iterable<?> iterable = (Iterable<?>) value;
-			Iterator<?> iter = iterable.iterator();
-			while (iter.hasNext()) {
-				String prop = propertyName + "_" + c++;
-				elements.add("@" + prop);
-				bindVars.put(prop, iter.next());
-			}
+            for (Object o : iterable) {
+                String prop = propertyName + "_" + c++;
+                elements.add("@" + prop);
+                bindVars.put(prop, o);
+            }
 		} else {
 			elements.add("@" + propertyName);
 			bindVars.put(propertyName, value);
@@ -207,7 +205,7 @@ public class ArangoDBPropertyFilter {
 	 * The Class PropertyContainer.
 	 */
 	
-	private class PropertyContainer {
+	private static class PropertyContainer {
 		
 		/** The name. */
 		

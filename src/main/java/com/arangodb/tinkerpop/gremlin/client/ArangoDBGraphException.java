@@ -49,32 +49,11 @@ public class ArangoDBGraphException extends RuntimeException {
     /**
      * Instantiates a new Arango DB graph exception.
      *
-     * @param errorCode 		    the ArangoDB error errorCode
-     * @param message 	            the exception message
-     */
-    
-    public ArangoDBGraphException(int errorCode, String message) {
-        super(message);
-    }
-
-    /**
-     * Instantiates a new Arango DB graph exception.
-     *
      * @param message the message
      */
     
     public ArangoDBGraphException(String message) {
         super(message);
-    }
-
-    /**
-     * Instantiates a new Arango DB graph exception.
-     *
-     * @param cause the cause
-     */
-    
-    public ArangoDBGraphException(Throwable cause) {
-        super(cause);
     }
 
 	public int getErrorCode() {
