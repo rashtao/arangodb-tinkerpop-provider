@@ -23,32 +23,14 @@ import org.apache.commons.configuration2.BaseConfiguration;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.tinkerpop.gremlin.process.computer.GraphComputer;
 import org.apache.tinkerpop.gremlin.process.computer.GraphFilter;
-import org.apache.tinkerpop.gremlin.structure.Direction;
-import org.apache.tinkerpop.gremlin.structure.Edge;
-import org.apache.tinkerpop.gremlin.structure.Element;
-import org.apache.tinkerpop.gremlin.structure.Graph;
-import org.apache.tinkerpop.gremlin.structure.Property;
-import org.apache.tinkerpop.gremlin.structure.T;
-import org.apache.tinkerpop.gremlin.structure.Transaction;
-import org.apache.tinkerpop.gremlin.structure.Vertex;
-import org.apache.tinkerpop.gremlin.structure.VertexProperty;
+import org.apache.tinkerpop.gremlin.structure.*;
 import org.apache.tinkerpop.gremlin.structure.util.Attachable;
 import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Stream;
 
 /**
@@ -68,7 +50,7 @@ public final class StarGraph implements Graph, Serializable {
     }
 
     protected Long nextId = 0l;
-    protected StarGraph.StarVertex starVertex = null;
+    protected StarVertex starVertex = null;
     protected Map<Object, Map<String, Object>> edgeProperties = null;
     protected Map<Object, Map<String, Object>> metaProperties = null;
     protected final boolean internStrings;
@@ -86,7 +68,7 @@ public final class StarGraph implements Graph, Serializable {
     /**
      * Gets the {@link Vertex} representative of the {@link StarGraph}.
      */
-    public StarGraph.StarVertex getStarVertex() {
+    public StarVertex getStarVertex() {
         return this.starVertex;
     }
 
@@ -98,28 +80,28 @@ public final class StarGraph implements Graph, Serializable {
     public Vertex addVertex(final Object... keyValues) {
         if (null == this.starVertex) {
             ElementHelper.legalPropertyKeyValueArray(keyValues);
-            this.starVertex = new StarGraph.StarVertex(ElementHelper.getIdValue(keyValues).orElse(this.nextId()), ElementHelper.getLabelValue(keyValues).orElse(Vertex.DEFAULT_LABEL));
+            this.starVertex = new StarVertex(ElementHelper.getIdValue(keyValues).orElse(this.nextId()), ElementHelper.getLabelValue(keyValues).orElse(Vertex.DEFAULT_LABEL));
             ElementHelper.attachProperties(this.starVertex, VertexProperty.Cardinality.list, keyValues); // TODO: is this smart? I say no... cause vertex property ids are not preserved.
             return this.starVertex;
         } else
-            return new StarGraph.StarAdjacentVertex(ElementHelper.getIdValue(keyValues).orElse(this.nextId()));
+            return new StarAdjacentVertex(ElementHelper.getIdValue(keyValues).orElse(this.nextId()));
     }
 
     @Override
     public <C extends GraphComputer> C compute(final Class<C> graphComputerClass) throws IllegalArgumentException {
-        throw Graph.Exceptions.graphComputerNotSupported();
+        throw Exceptions.graphComputerNotSupported();
     }
 
     @Override
     public GraphComputer compute() throws IllegalArgumentException {
-        throw Graph.Exceptions.graphComputerNotSupported();
+        throw Exceptions.graphComputerNotSupported();
     }
 
     @Override
     public Iterator<Vertex> vertices(final Object... vertexIds) {
         if (null == this.starVertex)
             return Collections.emptyIterator();
-        else if (vertexIds.length > 0 && vertexIds[0] instanceof StarGraph.StarVertex)
+        else if (vertexIds.length > 0 && vertexIds[0] instanceof StarVertex)
             return Stream.of(vertexIds).map(v -> (Vertex) v).iterator();  // todo: maybe do this better - not sure of star semantics here
         else if (idExists(this.starVertex.id(), vertexIds))
             return IteratorUtils.of(this.starVertex);
@@ -163,12 +145,12 @@ public final class StarGraph implements Graph, Serializable {
 
     @Override
     public Transaction tx() {
-        throw Graph.Exceptions.transactionsNotSupported();
+        throw Exceptions.transactionsNotSupported();
     }
 
     @Override
     public Variables variables() {
-        throw Graph.Exceptions.variablesNotSupported();
+        throw Exceptions.variablesNotSupported();
     }
 
     @Override
@@ -178,7 +160,7 @@ public final class StarGraph implements Graph, Serializable {
 
     @Override
     public Features features() {
-        return StarGraph.StarGraphFeatures.INSTANCE;
+        return StarGraphFeatures.INSTANCE;
     }
 
     @Override
@@ -202,10 +184,10 @@ public final class StarGraph implements Graph, Serializable {
      * Creates a new {@link StarGraph} from a {@link Vertex}.
      */
     public static StarGraph of(final Vertex vertex) {
-        if (vertex instanceof StarGraph.StarVertex) return (StarGraph) vertex.graph();
+        if (vertex instanceof StarVertex) return (StarGraph) vertex.graph();
         // else convert to a star graph
         final StarGraph starGraph = new StarGraph();
-        final StarGraph.StarVertex starVertex = (StarGraph.StarVertex) starGraph.addVertex(T.id, vertex.id(), T.label, vertex.label());
+        final StarVertex starVertex = (StarVertex) starGraph.addVertex(T.id, vertex.id(), T.label, vertex.label());
 
         final boolean supportsMetaProperties = vertex.graph().features().vertex().supportsMetaProperties();
 
@@ -226,8 +208,8 @@ public final class StarGraph implements Graph, Serializable {
         return starGraph;
     }
 
-    public static StarGraph.Builder build() {
-        return new StarGraph.Builder();
+    public static Builder build() {
+        return new Builder();
     }
 
     /**
@@ -252,7 +234,7 @@ public final class StarGraph implements Graph, Serializable {
          * @param b true to allow interning, false otherwise
          * @return this builder
          */
-        public StarGraph.Builder internStrings(final boolean b) {
+        public Builder internStrings(final boolean b) {
             this.internStrings = b;
             return this;
         }
@@ -265,7 +247,7 @@ public final class StarGraph implements Graph, Serializable {
          * whatever default value StarGraph's other public constructors or factory methods would use.
          * This option exists solely for performance tuning in specialized use-cases.
          */
-        public StarGraph.Builder compareIdsUsingStrings(final boolean b) {
+        public Builder compareIdsUsingStrings(final boolean b) {
             this.compareIdsUsingStrings = b;
             return this;
         }
@@ -281,7 +263,7 @@ public final class StarGraph implements Graph, Serializable {
     public Optional<StarGraph> applyGraphFilter(final GraphFilter graphFilter) {
         if (null == this.starVertex)
             return Optional.empty();
-        final Optional<StarGraph.StarVertex> filtered = this.starVertex.applyGraphFilter(graphFilter);
+        final Optional<StarVertex> filtered = this.starVertex.applyGraphFilter(graphFilter);
         return filtered.isPresent() ? Optional.of((StarGraph) filtered.get().graph()) : Optional.empty();
     }
 
@@ -351,7 +333,7 @@ public final class StarGraph implements Graph, Serializable {
     //// STAR VERTEX ////
     /////////////////////
 
-    public final class StarVertex extends StarGraph.StarElement<Vertex> implements Vertex {
+    public final class StarVertex extends StarElement<Vertex> implements Vertex {
 
         protected Map<String, List<Edge>> outEdges = null;
         protected Map<String, List<Edge>> inEdges = null;
@@ -440,7 +422,7 @@ public final class StarGraph implements Graph, Serializable {
                 outE = new ArrayList<>();
                 this.outEdges.put(label, outE);
             }
-            final StarGraph.StarEdge outEdge = new StarGraph.StarOutEdge(ElementHelper.getIdValue(keyValues).orElse(nextId()), label, inVertex.id());
+            final StarEdge outEdge = new StarOutEdge(ElementHelper.getIdValue(keyValues).orElse(nextId()), label, inVertex.id());
             ElementHelper.attachProperties(outEdge, keyValues);
             outE.add(outEdge);
             return outEdge;
@@ -456,7 +438,7 @@ public final class StarGraph implements Graph, Serializable {
                 inE = new ArrayList<>();
                 this.inEdges.put(label, inE);
             }
-            final StarGraph.StarEdge inEdge = new StarGraph.StarInEdge(ElementHelper.getIdValue(keyValues).orElse(nextId()), label, outVertex.id());
+            final StarEdge inEdge = new StarInEdge(ElementHelper.getIdValue(keyValues).orElse(nextId()), label, outVertex.id());
             ElementHelper.attachProperties(inEdge, keyValues);
             inE.add(inEdge);
             return inEdge;
@@ -468,7 +450,7 @@ public final class StarGraph implements Graph, Serializable {
             if (null == this.vertexProperties)
                 this.vertexProperties = new HashMap<>();
             final List<VertexProperty> list = cardinality.equals(VertexProperty.Cardinality.single) ? new ArrayList<>(1) : this.vertexProperties.getOrDefault(key, new ArrayList<>());
-            final VertexProperty<V> vertexProperty = new StarGraph.StarVertexProperty<>(ElementHelper.getIdValue(keyValues).orElse(nextId().toString()), key, value);
+            final VertexProperty<V> vertexProperty = new StarVertexProperty<>(ElementHelper.getIdValue(keyValues).orElse(nextId().toString()), key, value);
             ElementHelper.attachProperties(vertexProperty, keyValues);
             list.add(vertexProperty);
             this.vertexProperties.put(key, list);
@@ -536,7 +518,7 @@ public final class StarGraph implements Graph, Serializable {
 
         ///////////////
 
-        public Optional<StarGraph.StarVertex> applyGraphFilter(final GraphFilter graphFilter) {
+        public Optional<StarVertex> applyGraphFilter(final GraphFilter graphFilter) {
             if (!graphFilter.hasFilter())
                 return Optional.of(this);
             else if (graphFilter.legalVertex(this)) {
@@ -559,7 +541,7 @@ public final class StarGraph implements Graph, Serializable {
                         final Map<String, List<Edge>> outEdges = new HashMap<>();
                         final Map<String, List<Edge>> inEdges = new HashMap<>();
                         graphFilter.legalEdges(this).forEachRemaining(edge -> {
-                            if (edge instanceof StarGraph.StarOutEdge) {
+                            if (edge instanceof StarOutEdge) {
                                 List<Edge> edges = outEdges.get(edge.label());
                                 if (null == edges) {
                                     edges = new ArrayList<>();
@@ -605,7 +587,7 @@ public final class StarGraph implements Graph, Serializable {
     //// STAR VERTEX PROPERTY ////
     //////////////////////////////
 
-    public final class StarVertexProperty<V> extends StarGraph.StarElement<VertexProperty<V>> implements VertexProperty<V> {
+    public final class StarVertexProperty<V> extends StarElement<VertexProperty<V>> implements VertexProperty<V> {
 
         private final V value;
 
@@ -647,17 +629,17 @@ public final class StarGraph implements Graph, Serializable {
                 return Collections.emptyIterator();
             else if (propertyKeys.length == 0)
                 return (Iterator) properties.entrySet().stream()
-                        .map(entry -> new StarGraph.StarProperty<>(entry.getKey(), entry.getValue(), this))
+                        .map(entry -> new StarProperty<>(entry.getKey(), entry.getValue(), this))
                         .iterator();
             else if (propertyKeys.length == 1) {
                 final Object v = properties.get(propertyKeys[0]);
                 return null == v ?
                         Collections.emptyIterator() :
-                        (Iterator) IteratorUtils.of(new StarGraph.StarProperty<>(propertyKeys[0], v, this));
+                        (Iterator) IteratorUtils.of(new StarProperty<>(propertyKeys[0], v, this));
             } else {
                 return (Iterator) properties.entrySet().stream()
                         .filter(entry -> ElementHelper.keyExists(entry.getKey(), propertyKeys))
-                        .map(entry -> new StarGraph.StarProperty<>(entry.getKey(), entry.getValue(), this))
+                        .map(entry -> new StarProperty<>(entry.getKey(), entry.getValue(), this))
                         .iterator();
             }
         }
@@ -673,7 +655,7 @@ public final class StarGraph implements Graph, Serializable {
                 metaProperties.put(this.id, properties);
             }
             properties.put(key, value);
-            return new StarGraph.StarProperty<>(key, value, this);
+            return new StarProperty<>(key, value, this);
         }
 
         @Override
@@ -740,7 +722,7 @@ public final class StarGraph implements Graph, Serializable {
 
         @Override
         public void remove() {
-            throw Vertex.Exceptions.vertexRemovalNotSupported();
+            throw Exceptions.vertexRemovalNotSupported();
         }
 
         @Override
@@ -768,7 +750,7 @@ public final class StarGraph implements Graph, Serializable {
     //// STAR EDGE ////
     ///////////////////
 
-    public abstract class StarEdge extends StarGraph.StarElement<Edge> implements Edge {
+    public abstract class StarEdge extends StarElement<Edge> implements Edge {
 
         protected final Object otherId;
 
@@ -788,7 +770,7 @@ public final class StarGraph implements Graph, Serializable {
                 edgeProperties.put(this.id, properties);
             }
             properties.put(key, value);
-            return new StarGraph.StarProperty<>(key, value, this);
+            return new StarProperty<>(key, value, this);
         }
 
         @Override
@@ -798,17 +780,17 @@ public final class StarGraph implements Graph, Serializable {
                 return Collections.emptyIterator();
             else if (propertyKeys.length == 0)
                 return (Iterator) properties.entrySet().stream()
-                        .map(entry -> new StarGraph.StarProperty<>(entry.getKey(), entry.getValue(), this))
+                        .map(entry -> new StarProperty<>(entry.getKey(), entry.getValue(), this))
                         .iterator();
             else if (propertyKeys.length == 1) {
                 final Object v = properties.get(propertyKeys[0]);
                 return null == v ?
                         Collections.emptyIterator() :
-                        (Iterator) IteratorUtils.of(new StarGraph.StarProperty<>(propertyKeys[0], v, this));
+                        (Iterator) IteratorUtils.of(new StarProperty<>(propertyKeys[0], v, this));
             } else {
                 return (Iterator) properties.entrySet().stream()
                         .filter(entry -> ElementHelper.keyExists(entry.getKey(), propertyKeys))
-                        .map(entry -> new StarGraph.StarProperty<>(entry.getKey(), entry.getValue(), this))
+                        .map(entry -> new StarProperty<>(entry.getKey(), entry.getValue(), this))
                         .iterator();
             }
         }
@@ -834,7 +816,7 @@ public final class StarGraph implements Graph, Serializable {
         }
     }
 
-    public final class StarOutEdge extends StarGraph.StarEdge {
+    public final class StarOutEdge extends StarEdge {
 
         private StarOutEdge(final Object id, final String label, final Object otherId) {
             super(id, label, otherId);
@@ -847,11 +829,11 @@ public final class StarGraph implements Graph, Serializable {
 
         @Override
         public Vertex inVertex() {
-            return new StarGraph.StarAdjacentVertex(this.otherId);
+            return new StarAdjacentVertex(this.otherId);
         }
     }
 
-    public final class StarInEdge extends StarGraph.StarEdge {
+    public final class StarInEdge extends StarEdge {
 
         private StarInEdge(final Object id, final String label, final Object otherId) {
             super(id, label, otherId);
@@ -859,7 +841,7 @@ public final class StarGraph implements Graph, Serializable {
 
         @Override
         public Vertex outVertex() {
-            return new StarGraph.StarAdjacentVertex(this.otherId);
+            return new StarAdjacentVertex(this.otherId);
         }
 
         @Override
@@ -931,24 +913,24 @@ public final class StarGraph implements Graph, Serializable {
     }
 
     public static class StarGraphFeatures implements Features {
-        public static final StarGraph.StarGraphFeatures INSTANCE = new StarGraph.StarGraphFeatures();
+        public static final StarGraphFeatures INSTANCE = new StarGraphFeatures();
 
         private StarGraphFeatures() {
         }
 
         @Override
         public GraphFeatures graph() {
-            return StarGraph.StarGraphGraphFeatures.INSTANCE;
+            return StarGraphGraphFeatures.INSTANCE;
         }
 
         @Override
         public EdgeFeatures edge() {
-            return StarGraph.StarGraphEdgeFeatures.INSTANCE;
+            return StarGraphEdgeFeatures.INSTANCE;
         }
 
         @Override
         public VertexFeatures vertex() {
-            return StarGraph.StarGraphVertexFeatures.INSTANCE;
+            return StarGraphVertexFeatures.INSTANCE;
         }
 
         @Override
@@ -958,14 +940,14 @@ public final class StarGraph implements Graph, Serializable {
     }
 
     static class StarGraphVertexFeatures implements Features.VertexFeatures {
-        public static final StarGraph.StarGraphVertexFeatures INSTANCE = new StarGraph.StarGraphVertexFeatures();
+        public static final StarGraphVertexFeatures INSTANCE = new StarGraphVertexFeatures();
 
         private StarGraphVertexFeatures() {
         }
 
         @Override
         public Features.VertexPropertyFeatures properties() {
-            return StarGraph.StarGraphVertexPropertyFeatures.INSTANCE;
+            return StarGraphVertexPropertyFeatures.INSTANCE;
         }
 
         @Override
@@ -980,7 +962,7 @@ public final class StarGraph implements Graph, Serializable {
     }
 
     static class StarGraphEdgeFeatures implements Features.EdgeFeatures {
-        public static final StarGraph.StarGraphEdgeFeatures INSTANCE = new StarGraph.StarGraphEdgeFeatures();
+        public static final StarGraphEdgeFeatures INSTANCE = new StarGraphEdgeFeatures();
 
         private StarGraphEdgeFeatures() {
         }
@@ -997,7 +979,7 @@ public final class StarGraph implements Graph, Serializable {
     }
 
     static class StarGraphGraphFeatures implements Features.GraphFeatures {
-        public static final StarGraph.StarGraphGraphFeatures INSTANCE = new StarGraph.StarGraphGraphFeatures();
+        public static final StarGraphGraphFeatures INSTANCE = new StarGraphGraphFeatures();
 
         private StarGraphGraphFeatures() {
         }
@@ -1019,7 +1001,7 @@ public final class StarGraph implements Graph, Serializable {
     }
 
     static class StarGraphVertexPropertyFeatures implements Features.VertexPropertyFeatures {
-        public static final StarGraph.StarGraphVertexPropertyFeatures INSTANCE = new StarGraph.StarGraphVertexPropertyFeatures();
+        public static final StarGraphVertexPropertyFeatures INSTANCE = new StarGraphVertexPropertyFeatures();
 
         private StarGraphVertexPropertyFeatures() {
         }
