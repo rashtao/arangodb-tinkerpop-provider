@@ -8,6 +8,7 @@
 
 package com.arangodb.tinkerpop.gremlin.client;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -17,8 +18,16 @@ import com.arangodb.*;
 import com.arangodb.config.ArangoConfigProperties;
 import com.arangodb.entity.*;
 import com.arangodb.model.*;
+import com.arangodb.serde.jackson.JacksonSerde;
 import com.arangodb.tinkerpop.gremlin.persistence.*;
 import com.arangodb.tinkerpop.gremlin.structure.*;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalInterruptedException;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Graph;
@@ -127,6 +136,26 @@ public class ArangoDBGraphClient {
                 .loadProperties(ArangoConfigProperties.fromProperties(properties))
                 .build()
                 .db(dbname);
+        JacksonSerde serde = (JacksonSerde) db.getSerde().getUserSerde();
+        SimpleModule module = new SimpleModule();
+        module.addSerializer(ElementId.class, new JsonSerializer<ElementId>() {
+            @Override
+            public void serialize(ElementId value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+                String json = value.toJson();
+                if (json == null) {
+                    gen.writeNull();
+                } else {
+                    gen.writeString(json);
+                }
+            }
+        });
+        module.addDeserializer(ElementId.class, new JsonDeserializer<ElementId>() {
+            @Override
+            public ElementId deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+                return graph.getIdFactory().parse(p.getText());
+            }
+        });
+        serde.configure(mapper -> mapper.registerModule(module));
     }
 
     /**
@@ -238,10 +267,9 @@ public class ArangoDBGraphClient {
      */
 
     // FIXME: use multi-docs API
-    public ArangoIterable<VertexData> getGraphVertices(final List<ArangoDBId> ids) {
+    public ArangoIterable<VertexData> getGraphVertices(final List<ElementId> ids) {
         logger.debug("Get all {} graph vertices, filtered by ids: {}", graph.name(), ids);
-        List<String> prefixedColNames = graph.vertexCollections().stream().map(graph::getPrefixedCollectionName).collect(Collectors.toList());
-        return getGraphDocuments(ids, prefixedColNames, VertexData.class);
+        return getGraphDocuments(ids, graph.prefixedVertexCollections, VertexData.class);
     }
 
     /**
@@ -251,13 +279,12 @@ public class ArangoDBGraphClient {
      * @return ArangoDBBaseQuery    the query object
      */
     // FIXME: use multi-docs API
-    public ArangoIterable<EdgeData> getGraphEdges(List<ArangoDBId> ids) {
+    public ArangoIterable<EdgeData> getGraphEdges(List<ElementId> ids) {
         logger.debug("Get all {} graph edges, filtered by ids: {}", graph.name(), ids);
-        List<String> prefixedColNames = graph.edgeCollections().stream().map(graph::getPrefixedCollectionName).collect(Collectors.toList());
-        return getGraphDocuments(ids, prefixedColNames, EdgeData.class);
+        return getGraphDocuments(ids, graph.prefixedEdgeCollections, EdgeData.class);
     }
 
-    private <V> ArangoIterable<V> getGraphDocuments(List<ArangoDBId> ids, List<String> prefixedColNames, Class<V> clazz) {
+    private <V> ArangoIterable<V> getGraphDocuments(List<ElementId> ids, List<String> prefixedColNames, Class<V> clazz) {
         Map<String, Object> bindVars = new HashMap<>();
         ArangoDBQueryBuilder queryBuilder = new ArangoDBQueryBuilder();
         if (ids.isEmpty()) {
@@ -267,8 +294,7 @@ public class ArangoDBGraphClient {
                 queryBuilder.iterateCollection("d", prefixedColNames.get(0), bindVars);
             }
         } else {
-            List<ArangoDBId> prunedIds = ids.stream()
-                    .map(graph::getArangoDBId)
+            List<ElementId> prunedIds = ids.stream()
                     .filter(it -> prefixedColNames.contains(it.getCollection()))
                     .collect(Collectors.toList());
             queryBuilder.with(prefixedColNames, bindVars).documentsById(prunedIds, "d", bindVars);
@@ -390,7 +416,7 @@ public class ArangoDBGraphClient {
         edge.update(updateEntity);
     }
 
-    public VertexData readVertex(ArangoDBId id) {
+    public VertexData readVertex(ElementId id) {
         logger.debug("Read vertex {} in {}", id, graph.name());
         try {
             return db.graph(graph.name())
@@ -449,25 +475,39 @@ public class ArangoDBGraphClient {
         logger.debug("Document updated, new rev {}", vertexEntity.getRev());
     }
 
-    public Iterator<VertexData> getVertexNeighbors(ArangoDBId vertexId, List<String> edgeCollections, Direction direction) {
+    public Iterator<VertexData> getVertexNeighbors(ElementId vertexId, List<String> edgeCollections, Direction direction, String[] labels) {
         logger.debug("Get vertex {}:{} Neighbors, in {}, from collections {}", vertexId, direction, graph.name(), edgeCollections);
         Map<String, Object> bindVars = new HashMap<>();
         bindVars.put("start", vertexId);
         bindVars.put("graph", graph.name());
         bindVars.put("edgeCollections", edgeCollections);
-        String query = "FOR v IN 1..1 " + getArangoDirectionFromGremlinDirection(direction).getAqlName() +
-                " @start GRAPH @graph OPTIONS { edgeCollections: @edgeCollections, order: 'bfs' } RETURN v";
-        return executeAqlQuery(query, bindVars, null, VertexData.class);
+        StringBuilder query = new StringBuilder()
+                .append("FOR v, e IN 1..1 ")
+                .append(getArangoDirectionFromGremlinDirection(direction).getAqlName())
+                .append(" @start GRAPH @graph OPTIONS { edgeCollections: @edgeCollections }");
+        if (labels.length > 0) {
+            bindVars.put("labels", labels);
+            query.append(" FILTER e.label IN @labels");
+        }
+        query.append(" RETURN v");
+        return executeAqlQuery(query.toString(), bindVars, null, VertexData.class);
     }
 
-    public Iterator<EdgeData> getVertexEdges(ArangoDBId vertexId, List<String> edgeCollections, Direction direction) {
+    public Iterator<EdgeData> getVertexEdges(ElementId vertexId, List<String> edgeCollections, Direction direction, String[] labels) {
         logger.debug("Get vertex {}:{} Edges, in {}, from collections {}", vertexId, direction, graph.name(), edgeCollections);
         Map<String, Object> bindVars = new HashMap<>();
         bindVars.put("start", vertexId);
         bindVars.put("graph", graph.name());
         bindVars.put("edgeCollections", edgeCollections);
-        String query = "FOR v, e IN 1..1 " + getArangoDirectionFromGremlinDirection(direction).getAqlName() +
-                " @start GRAPH @graph OPTIONS { edgeCollections: @edgeCollections } RETURN e";
-        return executeAqlQuery(query, bindVars, null, EdgeData.class);
+        StringBuilder query = new StringBuilder()
+                .append("FOR v, e IN 1..1 ")
+                .append(getArangoDirectionFromGremlinDirection(direction).getAqlName())
+                .append(" @start GRAPH @graph OPTIONS { edgeCollections: @edgeCollections }");
+        if (labels.length > 0) {
+            bindVars.put("labels", labels);
+            query.append(" FILTER e.label IN @labels");
+        }
+        query.append(" RETURN e");
+        return executeAqlQuery(query.toString(), bindVars, null, EdgeData.class);
     }
 }

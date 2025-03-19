@@ -19,37 +19,40 @@
 
 package com.arangodb.tinkerpop.gremlin.persistence;
 
-import com.arangodb.serde.*;
-import com.arangodb.shaded.fasterxml.jackson.annotation.JsonProperty;
-import com.arangodb.tinkerpop.gremlin.structure.ArangoDBId;
+import com.arangodb.serde.jackson.From;
+import com.arangodb.serde.jackson.Id;
+import com.arangodb.serde.jackson.Key;
+import com.arangodb.serde.jackson.To;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.*;
 
 public class EdgeData extends SimplePropertyData implements PersistentData {
 
-    @InternalId
-    private ArangoDBId id;
+    @Id
+    private ElementId id;
 
     @JsonProperty
     private String label;
 
-    @InternalKey
+    @Key
     private String key;
 
-    @InternalFrom
-    private ArangoDBId from;
+    @From
+    private ElementId from;
 
-    @InternalTo
-    private ArangoDBId to;
+    @To
+    private ElementId to;
 
     public static EdgeData of(
-            ArangoDBId id,
-            ArangoDBId from,
-            ArangoDBId to
+            String label,
+            ElementId id,
+            ElementId from,
+            ElementId to
     ) {
         EdgeData data = new EdgeData();
         data.id = id;
-        data.label = id.getLabel();
+        data.label = label != null ? label : id.getLabel();
         data.key = id.getKey();
         data.from = from;
         data.to = to;
@@ -60,12 +63,12 @@ public class EdgeData extends SimplePropertyData implements PersistentData {
     }
 
     @Override
-    public ArangoDBId getId() {
+    public ElementId elementId() {
         return id;
     }
 
     @Override
-    public void setId(ArangoDBId id) {
+    public void setId(ElementId id) {
         this.id = id;
     }
 
@@ -74,21 +77,26 @@ public class EdgeData extends SimplePropertyData implements PersistentData {
         this.key = key;
     }
 
-    public ArangoDBId getFrom() {
+    @Override
+    public String getLabel() {
+        return label;
+    }
+
+    public ElementId getFrom() {
         return from;
     }
 
     @SuppressWarnings("unused")
-    public void setFrom(ArangoDBId from) {
+    public void setFrom(ElementId from) {
         this.from = from;
     }
 
-    public ArangoDBId getTo() {
+    public ElementId getTo() {
         return to;
     }
 
     @SuppressWarnings("unused")
-    public void setTo(ArangoDBId to) {
+    public void setTo(ElementId to) {
         this.to = to;
     }
 

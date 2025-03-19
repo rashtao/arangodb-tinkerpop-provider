@@ -45,9 +45,9 @@ import com.arangodb.tinkerpop.gremlin.structure.ArangoDBGraph;
  * @author Horacio Hoyos Rodriguez (https://www.york.ac.uk)
  */
 public class ArangoDBConfigurationBuilder {
-	
+
 	private static final Logger logger = LoggerFactory.getLogger(ArangoDBConfigurationBuilder.class);
-	
+
 	private static final String PROPERTY_KEY_HOSTS = "arangodb.hosts";
 	private static final String PROPERTY_KEY_TIMEOUT = "arangodb.timeout";
 	private static final String PROPERTY_KEY_USER = "arangodb.user";
@@ -62,70 +62,72 @@ public class ArangoDBConfigurationBuilder {
 
 	/** The db name. */
 	private String dbName = "tinkerpop";
-	
+
 	/** The graph name. */
 	private String graphName = "graph";
-	
+
 	/** The user. */
 	private String user = "gremlin";
-	
+
 	/** The password. */
 	private String password = "gremlin";
-	
+
 	/** The acquire host list flag. */
 	private boolean hostList;
-	
+
 	/** The use ssl flag. */
 	private boolean useSsl;
-	
+
 	/** The max number of connections. */
 	private Integer connections;
-	
+
 	/** The timeout. */
 	private Integer timeout;
-	
+
 	/** The VelocyStream chunk size. */
 	private Long velocyStreamChunk;
-	
+
 	/** The connection ttl. */
 	private Long connectionTtl;
-	
+
 	/** The protocol. */
 	private Protocol protocol;
-	
+
 	/** The strategy. */
 	private LoadBalancingStrategy strategy;
-	
+
 	/** The edges. */
 	private final Set<String> edges = new HashSet<>();
-	
+
 	/** The vertices. */
 	private final Set<String> vertices = new HashSet<>();
-	
+
 	/** The relations. */
 	private final Set<Triple<String, Set<String>, Set<String>>> relations = new HashSet<>();
-	
+
 	/** The hosts. */
 	private final Set<String> hosts = new HashSet<>();
 
 	/** If Collection Names should be prefixed with Graph name. **/
 	private Boolean shouldPrefixCollectionNames = true;
 
+	private Boolean simpleGraph = false;
+
 	/**
 	 * Instantiates a new arango DB configuration builder.
 	 */
-	
+
 	public ArangoDBConfigurationBuilder() {
-		
+
 	}
-	
+
 	/**
 	 * Build the configuration.
 	 *
 	 * @return a configuration that can be used to instantiate a new {@link ArangoDBGraph}.
 	 * @see ArangoDBGraph#open(org.apache.commons.configuration2.Configuration)
 	 */
-	
+
 	public BaseConfiguration build() {
 		BaseConfiguration config = new BaseConfiguration();
 		config.setListDelimiterHandler(new LegacyListDelimiterHandler('/'));
@@ -159,7 +161,7 @@ public class ArangoDBConfigurationBuilder {
 			}
 			rVal.append(String.join(",", r.getRight()));
 			rels.add(rVal.toString());
-			
+
 		}
 		if (!rels.isEmpty()) {
 			config.addProperty(fullPropertyKey(ArangoDBGraph.PROPERTY_KEY_RELATIONS), String.join("/", rels));
@@ -193,66 +195,69 @@ public class ArangoDBConfigurationBuilder {
 		if (!hosts.isEmpty()) {
 			config.addProperty(fullPropertyKey(PROPERTY_KEY_HOSTS), String.join(",", hosts));
 		}
-		if(shouldPrefixCollectionNames != null){
+		if (shouldPrefixCollectionNames != null) {
 			config.addProperty(fullPropertyKey(ArangoDBGraph.PROPERTY_KEY_SHOULD_PREFIX_COLLECTION_NAMES), shouldPrefixCollectionNames);
+		}
+		if (simpleGraph != null) {
+			config.addProperty(fullPropertyKey(ArangoDBGraph.SIMPLE_GRAPH), simpleGraph);
 		}
 
 		config.addProperty(Graph.GRAPH, ArangoDBGraph.class.getName());
 		return config;
 	}
-	
+
 	private String fullPropertyKey(String key) {
 		return ArangoDBGraph.PROPERTY_KEY_PREFIX + "." + key;
 	}
-	
+
 	/**
 	 * Name of the database to use.
 	 *
 	 * @param name 				the db name
 	 * @return a reference to this object.
 	 */
-	
+
 	public ArangoDBConfigurationBuilder dataBase(String name) {
 		dbName = name;
 		return this;
 	}
-	
+
 	/**
 	 * Name of the graph to use.
 	 *
 	 * @param name 			the graph name
 	 * @return a reference to this object.
 	 */
-	
+
 	public ArangoDBConfigurationBuilder graph(String name) {
 		graphName = name;
 		return this;
 	}
-	
+
 	/**
 	 * Add vertex collection.
 	 *
 	 * @param name 				the vertex collection name
 	 * @return a reference to this object.
 	 */
-	
+
 	public ArangoDBConfigurationBuilder withVertexCollection(String name) {
 		vertices.add(name);
 		return this;
 	}
-	
+
 	/**
 	 * Add edge collection.
 	 *
 	 * @param name 				the edge collection name
 	 * @return a reference to this object.
 	 */
-	
+
 	public ArangoDBConfigurationBuilder withEdgeCollection(String name) {
 		edges.add(name);
 		return this;
 	}
-	
+
 	/**
 	 * Configure a 1-to-1 edge, i.e. for a given edge collection define the source and target vertex
 	 * collections.
@@ -262,7 +267,7 @@ public class ArangoDBConfigurationBuilder {
 	 * @param targetCollection 		the target vertex collection
 	 * @return a reference to this object.
 	 */
-	
+
 	public ArangoDBConfigurationBuilder configureEdge(
 		String edgeCollection,
 		String sourceCollection,
@@ -275,7 +280,7 @@ public class ArangoDBConfigurationBuilder {
 		relations.add(triple);
 		return this;
 	}
-	
+
 	/**
 	 * Configure a 1-to-many edge, i.e. for a given edge collection define the source and target vertex
 	 * collections.
@@ -285,7 +290,7 @@ public class ArangoDBConfigurationBuilder {
 	 * @param targetCollections 	the target vertices collections
 	 * @return a reference to this object.
 	 */
-	
+
 	public ArangoDBConfigurationBuilder configureEdge(
 		String edgeCollection,
 		String sourceCollection,
@@ -296,8 +301,8 @@ public class ArangoDBConfigurationBuilder {
 		relations.add(triple);
 		return this;
 	}
-	
-	
+
+
 	/**
 	 * Configure a many-to-1 edge, i.e. for a given edge collection define the source and target vertex
 	 * collections.
@@ -307,7 +312,7 @@ public class ArangoDBConfigurationBuilder {
 	 * @param targetCollection 		the target vertex collection
 	 * @return a reference to this object.
 	 */
-	
+
 	public ArangoDBConfigurationBuilder configureEdge(
 		String edgeCollection,
 		Set<String> sourceCollections,
@@ -318,8 +323,8 @@ public class ArangoDBConfigurationBuilder {
 		relations.add(triple);
 		return this;
 	}
-	
-	
+
+
 	/**
 	 * Configure a many-to-many edge, i.e. for a given edge collection define the source and target vertex
 	 * collections.
@@ -329,7 +334,7 @@ public class ArangoDBConfigurationBuilder {
 	 * @param targetCollections 	the target vertices collections
 	 * @return a reference to this object.
 	 */
-	
+
 	public ArangoDBConfigurationBuilder configureEdge(
 		String edgeCollection,
 		Set<String> sourceCollections,
@@ -338,8 +343,8 @@ public class ArangoDBConfigurationBuilder {
 		relations.add(triple);
 		return this;
 	}
-	
-	
+
+
 	/**
 	 * ArangoDB hosts.
 	 * <p>
@@ -349,12 +354,12 @@ public class ArangoDBConfigurationBuilder {
 	 * @return a reference to this object.
 	 * @see <a href="https://github.com/arangodb/arangodb-java-driver/blob/master/docs/Drivers/Java/Reference/Setup.md">ArangoDB Java Driver</a>
 	 */
-	
+
 	public ArangoDBConfigurationBuilder arangoHosts(String host) {
 		this.hosts.add(host);
 		return this;
 	}
-	
+
 	/**
 	 * ArangoDB socket connect timeout(milliseconds).
 	 *
@@ -362,12 +367,12 @@ public class ArangoDBConfigurationBuilder {
 	 * @return a reference to this object.
 	 * @see <a href="https://github.com/arangodb/arangodb-java-driver/blob/master/docs/Drivers/Java/Reference/Setup.md">ArangoDB Java Driver</a>
 	 */
-	
+
 	public ArangoDBConfigurationBuilder arangoTimeout(int timeout) {
 		this.timeout = timeout;
 		return this;
 	}
-	
+
 	/**
 	 * ArangoDB Basic Authentication User.
 	 *
@@ -375,13 +380,13 @@ public class ArangoDBConfigurationBuilder {
 	 * @return a reference to this object.
 	 * @see <a href="https://github.com/arangodb/arangodb-java-driver/blob/master/docs/Drivers/Java/Reference/Setup.md">ArangoDB Java Driver</a>
 	 */
-	
+
 	public ArangoDBConfigurationBuilder arangoUser(String user) {
 		this.user = user;
 		return this;
 	}
-	
-	
+
+
 	/**
 	 * ArangoDB Basic Authentication Password.
 	 *
@@ -389,12 +394,12 @@ public class ArangoDBConfigurationBuilder {
 	 * @return a reference to this object.
 	 * @see <a href="https://github.com/arangodb/arangodb-java-driver/blob/master/docs/Drivers/Java/Reference/Setup.md">ArangoDB Java Driver</a>
 	 */
-	
+
 	public ArangoDBConfigurationBuilder arangoPassword(String password) {
 		this.password = password;
 		return this;
 	}
-	
+
 	/**
 	 * ArangoDB use SSL connection.
 	 *
@@ -402,12 +407,12 @@ public class ArangoDBConfigurationBuilder {
 	 * @return a reference to this object.
 	 * @see <a href="https://github.com/arangodb/arangodb-java-driver/blob/master/docs/Drivers/Java/Reference/Setup.md">ArangoDB Java Driver</a>
 	 */
-	
+
 	public ArangoDBConfigurationBuilder arangoSSL(boolean useSsl) {
 		this.useSsl = useSsl;
 		return this;
 	}
-	
+
 	/**
 	 * ArangoDB VelocyStream Chunk content-size(bytes).
 	 *
@@ -415,13 +420,13 @@ public class ArangoDBConfigurationBuilder {
 	 * @return a reference to this object.
 	 * @see <a href="https://github.com/arangodb/arangodb-java-driver/blob/master/docs/Drivers/Java/Reference/Setup.md">ArangoDB Java Driver</a>
 	 */
-	
+
 	public ArangoDBConfigurationBuilder arangoVelocyStreamChunk(long size) {
 		this.velocyStreamChunk = size;
 		return this;
 	}
-	
-	
+
+
 	/**
 	 * ArangoDB max number of connections.
 	 *
@@ -429,12 +434,12 @@ public class ArangoDBConfigurationBuilder {
 	 * @return a reference to this object.
 	 * @see <a href="https://github.com/arangodb/arangodb-java-driver/blob/master/docs/Drivers/Java/Reference/Setup.md">ArangoDB Java Driver</a>
 	 */
-	
+
 	public ArangoDBConfigurationBuilder arangoMaxConnections(int connections) {
 		this.connections = connections;
 		return this;
 	}
-	
+
 	/**
 	 * ArangoDB Connection time to live (ms).
 	 *
@@ -442,13 +447,13 @@ public class ArangoDBConfigurationBuilder {
 	 * @return a reference to this object.
 	 * @see <a href="https://github.com/arangodb/arangodb-java-driver/blob/master/docs/Drivers/Java/Reference/Setup.md">ArangoDB Java Driver</a>
 	 */
-	
+
 	public ArangoDBConfigurationBuilder arangoTTL(long time) {
 		this.connectionTtl = time;
 		return this;
 	}
-	
-	
+
+
 	/**
 	 * ArangoDB used network protocol.
 	 * <p>
@@ -459,13 +464,13 @@ public class ArangoDBConfigurationBuilder {
 	 * @return a reference to this object.
 	 * @see <a href="https://github.com/arangodb/arangodb-java-driver/blob/master/docs/Drivers/Java/Reference/Setup.md">ArangoDB Java Driver</a>
 	 */
-	
+
 	public ArangoDBConfigurationBuilder arangoNetworkProtocol(Protocol protocol) {
 		this.protocol = protocol;
 		return this;
 	}
-	
-	
+
+
 	/**
 	 * ArangoDB load balancing strategy.
 	 *
@@ -473,12 +478,12 @@ public class ArangoDBConfigurationBuilder {
 	 * @return a reference to this object.
 	 * @see <a href="https://github.com/arangodb/arangodb-java-driver/blob/master/docs/Drivers/Java/Reference/Setup.md">ArangoDB Java Driver</a>
 	 */
-	
+
 	public ArangoDBConfigurationBuilder arangoNetworkProtocol(LoadBalancingStrategy strategy) {
 		this.strategy = strategy;
 		return this;
 	}
-	
+
 	/**
 	 * ArangoDB acquire a list of all known hosts in the cluster.
 	 *
@@ -486,7 +491,7 @@ public class ArangoDBConfigurationBuilder {
 	 * @return a reference to this object.
 	 * @see <a href="https://github.com/arangodb/arangodb-java-driver/blob/master/docs/Drivers/Java/Reference/Setup.md">ArangoDB Java Driver</a>
 	 */
-	
+
 	public ArangoDBConfigurationBuilder arangoAcquireHostList(boolean hostList) {
 		this.hostList = hostList;
 		return this;
@@ -504,5 +509,22 @@ public class ArangoDBConfigurationBuilder {
 		this.shouldPrefixCollectionNames = shouldPrefixCollectionNames;
 		return this;
 	}
+
+    /**
+     * Whether to use a Simple Graph or a complex graph definition type.
+     * SimpleGraph is a type of graph definition composed of:
+     * - 1 vertex collection (named `vertex`), and
+     * - 1 edge collection (named `edge`).
+     * The collection names might be prefixed with the graph name.
+     * When using a complex graph, elements ids have format: `<graph>_<label>/<key>`.
+     * When using a simple graph, elements ids are strings without format constraints.
+     *
+     * @param simpleGraph whether to use a SimpleGraph or a complex graph definition type
+     * @return a reference to this object.
+     */
+    public ArangoDBConfigurationBuilder simpleGraph(boolean simpleGraph) {
+        this.simpleGraph = simpleGraph;
+        return this;
+    }
 
 }
