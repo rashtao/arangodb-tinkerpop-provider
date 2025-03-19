@@ -19,8 +19,8 @@
 
 package com.arangodb.tinkerpop.gremlin.persistence;
 
-import com.arangodb.shaded.fasterxml.jackson.annotation.JsonCreator;
-import com.arangodb.shaded.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.arangodb.tinkerpop.gremlin.utils.ArangoDBUtil;
 
 import java.util.Objects;

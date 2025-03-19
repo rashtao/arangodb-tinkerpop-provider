@@ -45,15 +45,15 @@ public interface ArangoDBPersistentElement extends Element {
     }
 
     default String collection() {
-        return data().getCollection();
+        return data().collection();
     }
 
     default ElementId elementId() {
-        return data().getElementId();
+        return data().elementId();
     }
 
     @Override
     default String id() {
-        return data().getId();
+        return data().id();
     }
 }

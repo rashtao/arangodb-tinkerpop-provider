@@ -20,7 +20,7 @@
 package com.arangodb.tinkerpop.gremlin.persistence;
 
 
-import com.arangodb.shaded.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.HashMap;
 import java.util.Map;

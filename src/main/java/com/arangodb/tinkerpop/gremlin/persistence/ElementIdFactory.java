@@ -7,6 +7,7 @@ import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -26,52 +27,29 @@ public class ElementIdFactory {
     }
 
     private String extractKey(final String id) {
-        if (id == null) {
-            return null;
-        }
-        int separator = id.indexOf('/');
-        if (separator > 0) {
-            return id.substring(separator + 1);
-        } else {
-            return id;
-        }
+        String[] parts = id.split("/");
+        return parts[parts.length - 1];
     }
 
     private String extractCollection(final String id) {
-        if (id == null) {
-            return null;
-        }
-        int separator = id.indexOf('/');
-        if (separator > 0) {
-            return id.substring(0, separator);
-        } else {
-            return null;
-        }
+        String[] parts = id.replaceFirst("^" + prefix + "_", "").split("/");
+        return parts.length == 2 ? parts[0] : null;
     }
 
-    private String extractLabel(final String collection, final String label) {
+    private String inferCollection(final String collection, final String label, final String defaultLabel) {
+        if (simpleGraph) {
+            return defaultLabel;
+        }
         if (collection != null) {
             if (label != null && !label.equals(collection)) {
                 throw new IllegalArgumentException("Mismatching label: [" + label + "] and collection: [" + collection + "]");
             }
             return collection;
-        } else {
+        }
+        if (label != null) {
             return label;
         }
-    }
-
-    private ElementId createId(Graph.Features.ElementFeatures features, String label, String defaultLabel, Object[] keyValues) {
-        Optional<Object> optionalId = ElementHelper.getIdValue(keyValues);
-        if (!optionalId.isPresent()) {
-            return ArangoId.of(prefix, Optional.ofNullable(label).orElse(defaultLabel), null);
-        }
-        String id = optionalId
-                .filter(features::willAllowId)
-                .map(Object::toString)
-                .orElseThrow(Vertex.Exceptions::userSuppliedIdsOfThisTypeNotSupported);
-        String l = Optional.ofNullable(extractLabel(extractCollection(id), label)).orElse(defaultLabel);
-        ElementHelper.validateLabel(l);
-        return ArangoId.of(prefix, l, extractKey(id));
+        return defaultLabel;
     }
 
     public ElementId createVertexId(Graph.Features.ElementFeatures features, String label, Object[] keyValues) {
@@ -84,7 +62,7 @@ public class ElementIdFactory {
 
     public ElementId parseVertexId(Object id) {
         if (id instanceof String) {
-            return ArangoId.parseWithDefaultLabel(prefix, defaultVertexLabel, (String) id);
+            return parseWithDefaultLabel((String) id, defaultVertexLabel);
         } else if (id instanceof Element) {
             return parseVertexId(((Element) id).id());
         } else {
@@ -100,7 +78,7 @@ public class ElementIdFactory {
 
     public ElementId parseEdgeId(Object id) {
         if (id instanceof String) {
-            return ArangoId.parseWithDefaultLabel(prefix, defaultEdgeLabel, (String) id);
+            return parseWithDefaultLabel((String) id, defaultEdgeLabel);
         } else if (id instanceof Element) {
             return parseEdgeId(((Element) id).id());
         } else {
@@ -114,8 +92,37 @@ public class ElementIdFactory {
                 .collect(Collectors.toList());
     }
 
-    public ElementId parse(String fullName) {
-        return ArangoId.parse(prefix, fullName);
+    public ElementId parse(String id) {
+        String collection = extractCollection(id);
+        String key = extractKey(id);
+        return of(prefix, collection, key);
+    }
+
+    private ElementId parseWithDefaultLabel(String id, String defaultLabel) {
+        String collection = inferCollection(extractCollection(id), null, defaultLabel);
+        String key = extractKey(id);
+        return of(prefix, collection, key);
+    }
+
+    private ElementId createId(Graph.Features.ElementFeatures features, String label, String defaultLabel, Object[] keyValues) {
+        Optional<Object> optionalId = ElementHelper.getIdValue(keyValues);
+        if (!optionalId.isPresent()) {
+            return of(prefix, inferCollection(null, label, defaultLabel), null);
+        }
+        String id = optionalId
+                .filter(features::willAllowId)
+                .map(Object::toString)
+                .orElseThrow(Vertex.Exceptions::userSuppliedIdsOfThisTypeNotSupported);
+        return of(prefix, inferCollection(extractCollection(id), label, defaultLabel), extractKey(id));
+    }
+
+    private ElementId of(String prefix, String collection, String key) {
+        Objects.requireNonNull(prefix);
+        Objects.requireNonNull(collection);
+        ElementId.validateIdParts(prefix, collection, key);
+        return simpleGraph ?
+                new SimpleId(prefix, collection, key) :
+                new ArangoId(prefix, collection, key);
     }
 
 }

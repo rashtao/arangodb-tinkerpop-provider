@@ -1,7 +1,6 @@
 package com.arangodb.tinkerpop.gremlin.simple;
 
 import com.arangodb.tinkerpop.gremlin.TestGraph;
-import com.arangodb.tinkerpop.gremlin.custom.CustomTestGraph;
 import com.arangodb.tinkerpop.gremlin.structure.*;
 import com.arangodb.tinkerpop.gremlin.util.TestGraphClient;
 import com.arangodb.tinkerpop.gremlin.utils.ArangoDBConfigurationBuilder;
@@ -61,7 +60,7 @@ public class SimpleGraphProvider extends AbstractGraphProvider {
                 ArangoDBEdge.class,
                 ArangoDBElement.class,
                 TestGraph.class,
-                CustomTestGraph.class,
+                SimpleTestGraph.class,
                 ArangoDBGraph.class,
                 ArangoDBGraphVariables.class,
                 ArangoDBPersistentElement.class,
