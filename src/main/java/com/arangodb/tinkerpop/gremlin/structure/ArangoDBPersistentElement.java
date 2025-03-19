@@ -20,10 +20,9 @@
 package com.arangodb.tinkerpop.gremlin.structure;
 
 import com.arangodb.entity.DocumentEntity;
+import com.arangodb.tinkerpop.gremlin.persistence.ElementId;
 import com.arangodb.tinkerpop.gremlin.persistence.PersistentData;
 import org.apache.tinkerpop.gremlin.structure.Element;
-
-import java.util.Optional;
 
 public interface ArangoDBPersistentElement extends Element {
 
@@ -49,14 +48,12 @@ public interface ArangoDBPersistentElement extends Element {
         return data().getCollection();
     }
 
-    default ArangoDBId arangoId() {
-        return data().getId();
+    default ElementId elementId() {
+        return data().getElementId();
     }
 
     @Override
     default String id() {
-        return Optional.ofNullable(key())
-                .map(it -> label() + '/' + it)
-                .orElse(null);
+        return data().getId();
     }
 }

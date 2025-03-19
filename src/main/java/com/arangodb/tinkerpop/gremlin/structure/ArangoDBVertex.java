@@ -19,6 +19,7 @@
 
 package com.arangodb.tinkerpop.gremlin.structure;
 
+import com.arangodb.tinkerpop.gremlin.persistence.ElementId;
 import com.arangodb.tinkerpop.gremlin.persistence.VertexData;
 import com.arangodb.tinkerpop.gremlin.persistence.VertexPropertyData;
 import org.apache.tinkerpop.gremlin.structure.*;
@@ -33,7 +34,7 @@ import static com.arangodb.tinkerpop.gremlin.structure.ArangoDBElement.Exception
 
 public class ArangoDBVertex extends ArangoDBElement<VertexPropertyData, VertexData> implements Vertex, ArangoDBPersistentElement {
 
-    public static ArangoDBVertex of(final ArangoDBId id, ArangoDBGraph graph) {
+    public static ArangoDBVertex of(final ElementId id, ArangoDBGraph graph) {
         return new ArangoDBVertex(graph, VertexData.of(id));
     }
 
@@ -81,15 +82,15 @@ public class ArangoDBVertex extends ArangoDBElement<VertexPropertyData, VertexDa
 
         ElementHelper.legalPropertyKeyValueArray(keyValues);
         ElementHelper.validateLabel(label);
-        ArangoDBId id = graph.createId(graph.features().edge(), label, Edge.DEFAULT_LABEL, keyValues);
-        ArangoDBId outVertexId = ArangoDBId.parse(graph.name(), id());
-        ArangoDBId inVertexId = ArangoDBId.parse(graph.name(), (String) vertex.id());
+        ElementId id = graph.getIdFactory().createEdgeId(graph.features().edge(), label, keyValues);
+        ElementId outVertexId = graph.getIdFactory().parse(id());
+        ElementId inVertexId = graph.getIdFactory().parse((String) vertex.id());
         ArangoDBEdge edge = ArangoDBEdge.of(id, outVertexId, inVertexId, graph);
         if (!graph.edgeCollections().contains(edge.label())) {
             throw new IllegalArgumentException(String.format("Edge label (%s) not in graph (%s) edge collections.", edge.label(), graph.name()));
         }
 
-        // TODO: optmize writing only once
+        // TODO: optimize writing only once
         edge.doInsert();
         ElementHelper.attachProperties(edge, keyValues);
         return edge;
@@ -119,7 +120,7 @@ public class ArangoDBVertex extends ArangoDBElement<VertexPropertyData, VertexDa
         if (edgeCollections.isEmpty()) {
             return Collections.emptyIterator();
         }
-        return IteratorUtils.map(graph.getClient().getVertexEdges(arangoId(), edgeCollections, direction),
+        return IteratorUtils.map(graph.getClient().getVertexEdges(elementId(), edgeCollections, direction),
                 it -> new ArangoDBEdge(graph, it));
     }
 
@@ -131,7 +132,7 @@ public class ArangoDBVertex extends ArangoDBElement<VertexPropertyData, VertexDa
         if (edgeCollections.isEmpty()) {
             return Collections.emptyIterator();
         }
-        return IteratorUtils.map(graph.getClient().getVertexNeighbors(arangoId(), edgeCollections, direction),
+        return IteratorUtils.map(graph.getClient().getVertexNeighbors(elementId(), edgeCollections, direction),
                 it -> new ArangoDBVertex(graph, it));
     }
 

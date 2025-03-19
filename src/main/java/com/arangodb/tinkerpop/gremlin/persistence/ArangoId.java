@@ -1,4 +1,4 @@
-package com.arangodb.tinkerpop.gremlin.structure;
+package com.arangodb.tinkerpop.gremlin.persistence;
 
 
 import com.arangodb.shaded.fasterxml.jackson.core.JsonGenerator;
@@ -12,42 +12,43 @@ import com.arangodb.shaded.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import java.io.IOException;
 import java.util.Objects;
+import java.util.Optional;
 
-@JsonSerialize(using = ArangoDBId.Serializer.class)
-@JsonDeserialize(using = ArangoDBId.Deserializer.class)
-public class ArangoDBId {
+@JsonSerialize(using = ArangoId.Serializer.class)
+@JsonDeserialize(using = ArangoId.Deserializer.class)
+class ArangoId implements ElementId {
     private final String prefix;
     private final String label;
     private final String key;
 
-    public static ArangoDBId of(String prefix, String label, String key) {
+    public static ArangoId of(String prefix, String label, String key) {
         Objects.requireNonNull(prefix);
         Objects.requireNonNull(label);
         validateIdParts(prefix, label, key);
-        return new ArangoDBId(prefix, label, key);
+        return new ArangoId(prefix, label, key);
     }
 
-    public static ArangoDBId parse(String prefix, String fullName) {
+    public static ArangoId parse(String prefix, String fullName) {
         String[] parts = fullName.replaceFirst("^" + prefix + "_", "").split("/");
         String label = parts[0];
         String key = parts[1];
-        return ArangoDBId.of(prefix, label, key);
+        return ArangoId.of(prefix, label, key);
     }
 
-    public static ArangoDBId parseWithDefaultLabel(String prefix, String defaultLabel, String fullName) {
+    public static ArangoId parseWithDefaultLabel(String prefix, String defaultLabel, String fullName) {
         String[] parts = fullName.replaceFirst("^" + prefix + "_", "").split("/");
         String label = parts.length == 2 ? parts[0] : defaultLabel;
         String key = parts[parts.length - 1];
-        return ArangoDBId.of(prefix, label, key);
+        return ArangoId.of(prefix, label, key);
     }
 
-    public static ArangoDBId parse(String fullName) {
+    public static ArangoId parse(String fullName) {
         String[] parts = fullName.split("_");
         String prefix = parts[0];
         parts = parts[1].split("/");
         String collection = parts[0];
         String key = parts[1];
-        return ArangoDBId.of(prefix, collection, key);
+        return ArangoId.of(prefix, collection, key);
     }
 
     private static void validateIdParts(String... names) {
@@ -63,26 +64,37 @@ public class ArangoDBId {
         }
     }
 
-    private ArangoDBId(String prefix, String label, String key) {
+    private ArangoId(String prefix, String label, String key) {
         this.prefix = prefix;
         this.label = label.replaceFirst("^" + prefix + "_", "");
         this.key = key;
     }
 
-    public ArangoDBId withKey(String newKey) {
-        return ArangoDBId.of(prefix, label, newKey);
+    @Override
+    public ArangoId withKey(String newKey) {
+        return ArangoId.of(prefix, label, newKey);
     }
 
+    @Override
     public String getCollection() {
         return prefix + "_" + label;
     }
 
+    @Override
     public String getLabel() {
         return label;
     }
 
+    @Override
     public String getKey() {
         return key;
+    }
+
+    @Override
+    public String getId() {
+        return Optional.ofNullable(key)
+                .map(it -> label + '/' + it)
+                .orElse(null);
     }
 
     @Override
@@ -92,9 +104,9 @@ public class ArangoDBId {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof ArangoDBId)) return false;
-        ArangoDBId arangoDBId = (ArangoDBId) o;
-        return Objects.equals(prefix, arangoDBId.prefix) && Objects.equals(label, arangoDBId.label) && Objects.equals(key, arangoDBId.key);
+        if (!(o instanceof ArangoId)) return false;
+        ArangoId arangoId = (ArangoId) o;
+        return Objects.equals(prefix, arangoId.prefix) && Objects.equals(label, arangoId.label) && Objects.equals(key, arangoId.key);
     }
 
     @Override
@@ -102,17 +114,17 @@ public class ArangoDBId {
         return Objects.hash(prefix, label, key);
     }
 
-    static class Serializer extends JsonSerializer<ArangoDBId> {
+    static class Serializer extends JsonSerializer<ArangoId> {
         @Override
-        public void serialize(ArangoDBId value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+        public void serialize(ArangoId value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
             gen.writeString(value.toString());
         }
     }
 
-    static class Deserializer extends JsonDeserializer<ArangoDBId> {
+    static class Deserializer extends JsonDeserializer<ArangoId> {
         @Override
-        public ArangoDBId deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-            return ArangoDBId.parse(p.getValueAsString());
+        public ArangoId deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+            return ArangoId.parse(p.getValueAsString());
         }
     }
 }

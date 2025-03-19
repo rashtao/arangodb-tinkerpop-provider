@@ -20,32 +20,35 @@
 package com.arangodb.tinkerpop.gremlin.persistence;
 
 import com.arangodb.entity.DocumentEntity;
-import com.arangodb.tinkerpop.gremlin.structure.ArangoDBId;
 
 public interface PersistentData {
 
-    ArangoDBId getId();
+    ElementId getElementId();
 
-    void setId(ArangoDBId id);
+    void setId(ElementId id);
 
     void setKey(String key);
 
+    default String getId() {
+        return getElementId().getId();
+    }
+
     default String getLabel() {
-        return getId().getLabel();
+        return getElementId().getLabel();
     }
 
     default String getKey() {
-        return getId().getKey();
+        return getElementId().getKey();
     }
 
     default String getCollection() {
-        return getId().getCollection();
+        return getElementId().getCollection();
     }
 
     default void update(DocumentEntity entity) {
         String k = entity.getKey();
         setKey(k);
-        setId(getId().withKey(k));
+        setId(getElementId().withKey(k));
     }
 
 }

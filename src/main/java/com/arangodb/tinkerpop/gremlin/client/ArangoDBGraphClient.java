@@ -238,7 +238,7 @@ public class ArangoDBGraphClient {
      */
 
     // FIXME: use multi-docs API
-    public ArangoIterable<VertexData> getGraphVertices(final List<ArangoDBId> ids) {
+    public ArangoIterable<VertexData> getGraphVertices(final List<ElementId> ids) {
         logger.debug("Get all {} graph vertices, filtered by ids: {}", graph.name(), ids);
         List<String> prefixedColNames = graph.vertexCollections().stream().map(graph::getPrefixedCollectionName).collect(Collectors.toList());
         return getGraphDocuments(ids, prefixedColNames, VertexData.class);
@@ -251,13 +251,13 @@ public class ArangoDBGraphClient {
      * @return ArangoDBBaseQuery    the query object
      */
     // FIXME: use multi-docs API
-    public ArangoIterable<EdgeData> getGraphEdges(List<ArangoDBId> ids) {
+    public ArangoIterable<EdgeData> getGraphEdges(List<ElementId> ids) {
         logger.debug("Get all {} graph edges, filtered by ids: {}", graph.name(), ids);
         List<String> prefixedColNames = graph.edgeCollections().stream().map(graph::getPrefixedCollectionName).collect(Collectors.toList());
         return getGraphDocuments(ids, prefixedColNames, EdgeData.class);
     }
 
-    private <V> ArangoIterable<V> getGraphDocuments(List<ArangoDBId> ids, List<String> prefixedColNames, Class<V> clazz) {
+    private <V> ArangoIterable<V> getGraphDocuments(List<ElementId> ids, List<String> prefixedColNames, Class<V> clazz) {
         Map<String, Object> bindVars = new HashMap<>();
         ArangoDBQueryBuilder queryBuilder = new ArangoDBQueryBuilder();
         if (ids.isEmpty()) {
@@ -267,8 +267,7 @@ public class ArangoDBGraphClient {
                 queryBuilder.iterateCollection("d", prefixedColNames.get(0), bindVars);
             }
         } else {
-            List<ArangoDBId> prunedIds = ids.stream()
-                    .map(graph::getArangoDBId)
+            List<ElementId> prunedIds = ids.stream()
                     .filter(it -> prefixedColNames.contains(it.getCollection()))
                     .collect(Collectors.toList());
             queryBuilder.with(prefixedColNames, bindVars).documentsById(prunedIds, "d", bindVars);
@@ -390,7 +389,7 @@ public class ArangoDBGraphClient {
         edge.update(updateEntity);
     }
 
-    public VertexData readVertex(ArangoDBId id) {
+    public VertexData readVertex(ElementId id) {
         logger.debug("Read vertex {} in {}", id, graph.name());
         try {
             return db.graph(graph.name())
@@ -449,7 +448,7 @@ public class ArangoDBGraphClient {
         logger.debug("Document updated, new rev {}", vertexEntity.getRev());
     }
 
-    public Iterator<VertexData> getVertexNeighbors(ArangoDBId vertexId, List<String> edgeCollections, Direction direction) {
+    public Iterator<VertexData> getVertexNeighbors(ElementId vertexId, List<String> edgeCollections, Direction direction) {
         logger.debug("Get vertex {}:{} Neighbors, in {}, from collections {}", vertexId, direction, graph.name(), edgeCollections);
         Map<String, Object> bindVars = new HashMap<>();
         bindVars.put("start", vertexId);
@@ -460,7 +459,7 @@ public class ArangoDBGraphClient {
         return executeAqlQuery(query, bindVars, null, VertexData.class);
     }
 
-    public Iterator<EdgeData> getVertexEdges(ArangoDBId vertexId, List<String> edgeCollections, Direction direction) {
+    public Iterator<EdgeData> getVertexEdges(ElementId vertexId, List<String> edgeCollections, Direction direction) {
         logger.debug("Get vertex {}:{} Edges, in {}, from collections {}", vertexId, direction, graph.name(), edgeCollections);
         Map<String, Object> bindVars = new HashMap<>();
         bindVars.put("start", vertexId);
