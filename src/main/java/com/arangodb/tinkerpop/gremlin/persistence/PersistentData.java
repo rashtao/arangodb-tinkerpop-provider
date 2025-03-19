@@ -23,32 +23,30 @@ import com.arangodb.entity.DocumentEntity;
 
 public interface PersistentData {
 
-    ElementId getElementId();
+    ElementId elementId();
 
     void setId(ElementId id);
 
     void setKey(String key);
 
-    default String getId() {
-        return getElementId().getId();
+    default String id() {
+        return elementId().getId();
     }
 
-    default String getLabel() {
-        return getElementId().getLabel();
-    }
+    String getLabel();
 
     default String getKey() {
-        return getElementId().getKey();
+        return elementId().getKey();
     }
 
-    default String getCollection() {
-        return getElementId().getCollection();
+    default String collection() {
+        return elementId().getCollection();
     }
 
     default void update(DocumentEntity entity) {
         String k = entity.getKey();
         setKey(k);
-        setId(getElementId().withKey(k));
+        setId(elementId().withKey(k));
     }
 
 }

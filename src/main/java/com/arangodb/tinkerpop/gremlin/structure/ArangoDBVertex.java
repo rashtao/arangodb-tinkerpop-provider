@@ -34,8 +34,15 @@ import static com.arangodb.tinkerpop.gremlin.structure.ArangoDBElement.Exception
 
 public class ArangoDBVertex extends ArangoDBElement<VertexPropertyData, VertexData> implements Vertex, ArangoDBPersistentElement {
 
-    public static ArangoDBVertex of(final ElementId id, ArangoDBGraph graph) {
-        return new ArangoDBVertex(graph, VertexData.of(id));
+    private static String inferLabel(String label, ElementId id) {
+        if (label != null) {
+            return label;
+        }
+        return Optional.ofNullable(id.getLabel()).orElse(Vertex.DEFAULT_LABEL);
+    }
+
+    public static ArangoDBVertex of(String label, ElementId id, ArangoDBGraph graph) {
+        return new ArangoDBVertex(graph, VertexData.of(inferLabel(label, id), id));
     }
 
     public ArangoDBVertex(ArangoDBGraph graph, VertexData data) {
@@ -83,11 +90,11 @@ public class ArangoDBVertex extends ArangoDBElement<VertexPropertyData, VertexDa
         ElementHelper.legalPropertyKeyValueArray(keyValues);
         ElementHelper.validateLabel(label);
         ElementId id = graph.getIdFactory().createEdgeId(graph.features().edge(), label, keyValues);
-        ElementId outVertexId = graph.getIdFactory().parse(id());
-        ElementId inVertexId = graph.getIdFactory().parse((String) vertex.id());
-        ArangoDBEdge edge = ArangoDBEdge.of(id, outVertexId, inVertexId, graph);
-        if (!graph.edgeCollections().contains(edge.label())) {
-            throw new IllegalArgumentException(String.format("Edge label (%s) not in graph (%s) edge collections.", edge.label(), graph.name()));
+        ElementId outVertexId = graph.getIdFactory().parseVertexId(id());
+        ElementId inVertexId = graph.getIdFactory().parseVertexId(vertex.id());
+        ArangoDBEdge edge = ArangoDBEdge.of(label, id, outVertexId, inVertexId, graph);
+        if (!graph.prefixedEdgeCollections.contains(edge.collection())) {
+            throw new IllegalArgumentException(String.format("Edge collection (%s) not in graph (%s).", edge.collection(), graph.name()));
         }
 
         // TODO: optimize writing only once
@@ -120,7 +127,7 @@ public class ArangoDBVertex extends ArangoDBElement<VertexPropertyData, VertexDa
         if (edgeCollections.isEmpty()) {
             return Collections.emptyIterator();
         }
-        return IteratorUtils.map(graph.getClient().getVertexEdges(elementId(), edgeCollections, direction),
+        return IteratorUtils.map(graph.getClient().getVertexEdges(elementId(), edgeCollections, direction, edgeLabels),
                 it -> new ArangoDBEdge(graph, it));
     }
 
@@ -132,7 +139,7 @@ public class ArangoDBVertex extends ArangoDBElement<VertexPropertyData, VertexDa
         if (edgeCollections.isEmpty()) {
             return Collections.emptyIterator();
         }
-        return IteratorUtils.map(graph.getClient().getVertexNeighbors(elementId(), edgeCollections, direction),
+        return IteratorUtils.map(graph.getClient().getVertexNeighbors(elementId(), edgeCollections, direction, edgeLabels),
                 it -> new ArangoDBVertex(graph, it));
     }
 
@@ -172,16 +179,12 @@ public class ArangoDBVertex extends ArangoDBElement<VertexPropertyData, VertexDa
      * edgeLabels not in the graph.
      */
     private List<String> getQueryEdgeCollections(String... edgeLabels) {
-        List<String> vertexCollections;
-        if (edgeLabels.length == 0) {
-            vertexCollections = graph.edgeCollections().stream().map(graph::getPrefixedCollectionName).collect(Collectors.toList());
-        } else {
-            vertexCollections = Arrays.stream(edgeLabels)
-                    .filter(el -> graph.edgeCollections().contains(el))
-                    .map(graph::getPrefixedCollectionName)
-                    .collect(Collectors.toList());
-
+        if (graph.simpleGraph || edgeLabels.length == 0) {
+            return graph.prefixedEdgeCollections;
         }
-        return vertexCollections;
+        return Arrays.stream(edgeLabels)
+                .filter(graph.edgeCollections::contains)
+                .map(graph::getPrefixedCollectionName)
+                .collect(Collectors.toList());
     }
 }

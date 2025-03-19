@@ -19,36 +19,40 @@
 
 package com.arangodb.tinkerpop.gremlin.persistence;
 
-import com.arangodb.serde.*;
-import com.arangodb.shaded.fasterxml.jackson.annotation.JsonProperty;
+import com.arangodb.serde.jackson.From;
+import com.arangodb.serde.jackson.Id;
+import com.arangodb.serde.jackson.Key;
+import com.arangodb.serde.jackson.To;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.*;
 
 public class EdgeData extends SimplePropertyData implements PersistentData {
 
-    @InternalId
+    @Id
     private ElementId id;
 
     @JsonProperty
     private String label;
 
-    @InternalKey
+    @Key
     private String key;
 
-    @InternalFrom
+    @From
     private ElementId from;
 
-    @InternalTo
+    @To
     private ElementId to;
 
     public static EdgeData of(
+            String label,
             ElementId id,
             ElementId from,
             ElementId to
     ) {
         EdgeData data = new EdgeData();
         data.id = id;
-        data.label = id.getLabel();
+        data.label = label != null ? label : id.getLabel();
         data.key = id.getKey();
         data.from = from;
         data.to = to;
@@ -59,7 +63,7 @@ public class EdgeData extends SimplePropertyData implements PersistentData {
     }
 
     @Override
-    public ElementId getElementId() {
+    public ElementId elementId() {
         return id;
     }
 
@@ -71,6 +75,11 @@ public class EdgeData extends SimplePropertyData implements PersistentData {
     @Override
     public void setKey(String key) {
         this.key = key;
+    }
+
+    @Override
+    public String getLabel() {
+        return label;
     }
 
     public ElementId getFrom() {
