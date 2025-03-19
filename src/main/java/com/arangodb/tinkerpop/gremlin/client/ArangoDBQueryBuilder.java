@@ -11,7 +11,7 @@ package com.arangodb.tinkerpop.gremlin.client;
 import java.util.List;
 import java.util.Map;
 
-import com.arangodb.tinkerpop.gremlin.structure.ArangoDBId;
+import com.arangodb.tinkerpop.gremlin.persistence.ElementId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -115,7 +115,7 @@ public class ArangoDBQueryBuilder {
 	 */
 	
 	public ArangoDBQueryBuilder documentsById(
-		List<ArangoDBId> ids,
+		List<ElementId> ids,
 		String loopVariable,
 		Map<String, Object> bindVars) {
 		queryBuilder.append("LET docs = FLATTEN(RETURN Document(@ids))\n");

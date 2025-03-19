@@ -22,7 +22,6 @@ package com.arangodb.tinkerpop.gremlin.persistence;
 import com.arangodb.serde.InternalId;
 import com.arangodb.serde.InternalKey;
 import com.arangodb.shaded.fasterxml.jackson.annotation.JsonProperty;
-import com.arangodb.tinkerpop.gremlin.structure.ArangoDBId;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -30,7 +29,7 @@ import java.util.stream.Stream;
 public class VertexData implements PropertyData<VertexPropertyData>, PersistentData {
 
     @InternalId
-    private ArangoDBId id;
+    private ElementId id;
 
     @JsonProperty
     private String label;
@@ -44,7 +43,7 @@ public class VertexData implements PropertyData<VertexPropertyData>, PersistentD
     public VertexData() {
     }
 
-    public static VertexData of(ArangoDBId id) {
+    public static VertexData of(ElementId id) {
         VertexData data = new VertexData();
         data.id = id;
         data.label = id.getLabel();
@@ -53,12 +52,12 @@ public class VertexData implements PropertyData<VertexPropertyData>, PersistentD
     }
 
     @Override
-    public ArangoDBId getId() {
+    public ElementId getElementId() {
         return id;
     }
 
     @Override
-    public void setId(ArangoDBId id) {
+    public void setId(ElementId id) {
         this.id = id;
     }
 

@@ -21,14 +21,13 @@ package com.arangodb.tinkerpop.gremlin.persistence;
 
 import com.arangodb.serde.*;
 import com.arangodb.shaded.fasterxml.jackson.annotation.JsonProperty;
-import com.arangodb.tinkerpop.gremlin.structure.ArangoDBId;
 
 import java.util.*;
 
 public class EdgeData extends SimplePropertyData implements PersistentData {
 
     @InternalId
-    private ArangoDBId id;
+    private ElementId id;
 
     @JsonProperty
     private String label;
@@ -37,15 +36,15 @@ public class EdgeData extends SimplePropertyData implements PersistentData {
     private String key;
 
     @InternalFrom
-    private ArangoDBId from;
+    private ElementId from;
 
     @InternalTo
-    private ArangoDBId to;
+    private ElementId to;
 
     public static EdgeData of(
-            ArangoDBId id,
-            ArangoDBId from,
-            ArangoDBId to
+            ElementId id,
+            ElementId from,
+            ElementId to
     ) {
         EdgeData data = new EdgeData();
         data.id = id;
@@ -60,12 +59,12 @@ public class EdgeData extends SimplePropertyData implements PersistentData {
     }
 
     @Override
-    public ArangoDBId getId() {
+    public ElementId getElementId() {
         return id;
     }
 
     @Override
-    public void setId(ArangoDBId id) {
+    public void setId(ElementId id) {
         this.id = id;
     }
 
@@ -74,21 +73,21 @@ public class EdgeData extends SimplePropertyData implements PersistentData {
         this.key = key;
     }
 
-    public ArangoDBId getFrom() {
+    public ElementId getFrom() {
         return from;
     }
 
     @SuppressWarnings("unused")
-    public void setFrom(ArangoDBId from) {
+    public void setFrom(ElementId from) {
         this.from = from;
     }
 
-    public ArangoDBId getTo() {
+    public ElementId getTo() {
         return to;
     }
 
     @SuppressWarnings("unused")
-    public void setTo(ArangoDBId to) {
+    public void setTo(ElementId to) {
         this.to = to;
     }
 
