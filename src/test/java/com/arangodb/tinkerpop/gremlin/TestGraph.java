@@ -6,6 +6,8 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 
 @Graph.OptIn(Graph.OptIn.SUITE_STRUCTURE_STANDARD)
 @Graph.OptIn(Graph.OptIn.SUITE_PROCESS_STANDARD)
+@Graph.OptIn("com.arangodb.tinkerpop.gremlin.complex.custom.CustomStandardSuite")
+@Graph.OptIn("com.arangodb.tinkerpop.gremlin.simple.custom.CustomStandardSuite")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.structure.util.detached.DetachedGraphTest",
         method = "testAttachableCreateMethod",
@@ -52,8 +54,28 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
         reason = "FIXME: DE-995")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.OrderabilityTest$Traversals",
-        method = "*",
-        reason = "replaced by com.arangodb.tinkerpop.gremlin.custom.process.traversal.step.OrderabilityTest")
+        method = "g_V_properties_order",
+        reason = "requires numeric ids support")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.OrderabilityTest$Traversals",
+        method = "g_V_out_outE_order_byXascX",
+        reason = "requires numeric ids support")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.OrderabilityTest$Traversals",
+        method = "g_V_out_outE_order_byXdescX",
+        reason = "requires numeric ids support")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.OrderabilityTest$Traversals",
+        method = "g_V_out_outE_asXheadX_path_order_byXascX_selectXheadX",
+        reason = "requires numeric ids support")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.OrderabilityTest$Traversals",
+        method = "g_V_out_out_properties_asXheadX_path_order_byXdescX_selectXheadX_value",
+        reason = "requires numeric ids support")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.OrderabilityTest$Traversals",
+        method = "g_V_out_outE_asXheadX_path_order_byXdescX_selectXheadX",
+        reason = "requires numeric ids support")
 public class TestGraph extends ArangoDBGraph {
 
     @SuppressWarnings("unused")
