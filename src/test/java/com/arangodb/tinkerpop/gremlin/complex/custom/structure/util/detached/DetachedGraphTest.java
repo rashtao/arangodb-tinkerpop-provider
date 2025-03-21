@@ -16,9 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.arangodb.tinkerpop.gremlin.custom.structure.util.detached;
+package com.arangodb.tinkerpop.gremlin.complex.custom.structure.util.detached;
 
-import com.arangodb.tinkerpop.gremlin.custom.structure.util.star.StarGraph;
+import com.arangodb.tinkerpop.gremlin.complex.custom.structure.util.star.StarGraph;
 import org.apache.tinkerpop.gremlin.AbstractGremlinTest;
 import org.apache.tinkerpop.gremlin.FeatureRequirement;
 import org.apache.tinkerpop.gremlin.TestHelper;

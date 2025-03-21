@@ -1,4 +1,4 @@
-package com.arangodb.tinkerpop.gremlin.util;
+package com.arangodb.tinkerpop.gremlin;
 
 import com.arangodb.ArangoDBException;
 import com.arangodb.tinkerpop.gremlin.client.ArangoDBGraphClient;

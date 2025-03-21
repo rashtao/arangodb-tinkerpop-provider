@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.arangodb.tinkerpop.gremlin.custom.structure.util.star;
+package com.arangodb.tinkerpop.gremlin.complex.custom.structure.util.star;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.tinkerpop.gremlin.AbstractGremlinTest;

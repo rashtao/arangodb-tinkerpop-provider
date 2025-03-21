@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.arangodb.tinkerpop.gremlin.custom.process.traversal.step.map;
+package com.arangodb.tinkerpop.gremlin.complex.custom.process.traversal.step.map;
 
 import java.util.Map;
 
