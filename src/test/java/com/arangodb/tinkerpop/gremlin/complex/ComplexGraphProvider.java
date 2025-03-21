@@ -3,10 +3,28 @@ package com.arangodb.tinkerpop.gremlin.complex;
 import com.arangodb.tinkerpop.gremlin.TestGraphProvider;
 
 import com.arangodb.tinkerpop.gremlin.utils.ArangoDBConfigurationBuilder;
+import org.apache.commons.configuration2.Configuration;
 import org.apache.tinkerpop.gremlin.LoadGraphWith;
+import org.apache.tinkerpop.gremlin.algorithm.generator.CommunityGeneratorTest;
+import org.apache.tinkerpop.gremlin.algorithm.generator.DistributionGeneratorTest;
+import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.VertexTest;
 
+import java.util.Map;
+
 public class ComplexGraphProvider extends TestGraphProvider {
+
+    @Override
+    public Configuration newGraphConfiguration(final String graphName, final Class<?> test,
+                                               final String testMethodName,
+                                               final Map<String, Object> configurationOverrides,
+                                               final LoadGraphWith.GraphData loadGraphWith) {
+        Configuration conf = super.newGraphConfiguration(graphName, test, testMethodName, configurationOverrides, loadGraphWith);
+        // FIXME: add config method
+        conf.setProperty(Graph.GRAPH, ComplexTestGraph.class.getName());
+        return conf;
+    }
+
     @Override
     protected void configure(ArangoDBConfigurationBuilder builder, Class<?> test, String testMethodName, LoadGraphWith.GraphData loadGraphWith) {
         if (loadGraphWith != null) {
@@ -73,8 +91,10 @@ public class ComplexGraphProvider extends TestGraphProvider {
                     break;
             }
         } else {
-            if (testMethodName.startsWith("shouldProcessVerticesEdges")
-                    || testMethodName.startsWith("shouldGenerate")
+            if (test == CommunityGeneratorTest.DifferentDistributionsTest.class
+                    || test == DistributionGeneratorTest.DifferentDistributionsTest.class) {
+                builder.withEdgeCollection("knows");
+            } else if (testMethodName.startsWith("shouldProcessVerticesEdges")
                     || testMethodName.startsWith("shouldSetValueOnEdge")
                     || testMethodName.startsWith("shouldAutotype")) {
                 builder.withEdgeCollection("knows");
