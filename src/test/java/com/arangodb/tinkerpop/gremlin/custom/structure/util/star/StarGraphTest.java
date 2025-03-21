@@ -16,9 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.arangodb.tinkerpop.gremlin.complex.custom.structure.util.detached;
+package com.arangodb.tinkerpop.gremlin.custom.structure.util.star;
 
-import com.arangodb.tinkerpop.gremlin.complex.custom.structure.util.star.StarGraph;
 import org.apache.tinkerpop.gremlin.AbstractGremlinTest;
 import org.apache.tinkerpop.gremlin.FeatureRequirement;
 import org.apache.tinkerpop.gremlin.TestHelper;
@@ -28,9 +27,6 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.util.Attachable;
-import org.apache.tinkerpop.gremlin.structure.util.detached.DetachedEdge;
-import org.apache.tinkerpop.gremlin.structure.util.detached.DetachedFactory;
-import org.apache.tinkerpop.gremlin.structure.util.detached.DetachedVertex;
 import org.junit.Test;
 
 import java.util.Random;
@@ -39,7 +35,7 @@ import java.util.UUID;
 /**
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class DetachedGraphTest extends AbstractGremlinTest {
+public class StarGraphTest extends AbstractGremlinTest {
 
     @Test
     @FeatureRequirement(featureClass = Graph.Features.VertexFeatures.class, feature = Graph.Features.VertexFeatures.FEATURE_USER_SUPPLIED_IDS)
@@ -51,28 +47,24 @@ public class DetachedGraphTest extends AbstractGremlinTest {
     @FeatureRequirement(featureClass = Graph.Features.VertexFeatures.class, feature = Graph.Features.VertexFeatures.FEATURE_MULTI_PROPERTIES)
     @FeatureRequirement(featureClass = Graph.Features.EdgeFeatures.class, feature = Graph.Features.EdgeFeatures.FEATURE_ADD_EDGES)
     @FeatureRequirement(featureClass = Graph.Features.EdgeFeatures.class, feature = Graph.Features.EdgeFeatures.FEATURE_ADD_PROPERTY)
-    public void testAttachableCreateMethod() {
+    public void shouldAttachWithCreateMethod() {
         final Random random = TestHelper.RANDOM;
         StarGraph starGraph = StarGraph.open();
-        final String label = "person";
-        final String id = label + "/" + UUID.randomUUID();
-        Vertex starVertex = starGraph.addVertex(T.id, id, T.label, label, "name", "stephen", "name", "spmallete");
+        Vertex starVertex = starGraph.addVertex(T.id, UUID.randomUUID().toString(), T.label, "person", "name", "stephen", "name", "spmallete");
         starVertex.property("acl", true, "timestamp", random.nextLong(), "creator", "marko");
         for (int i = 0; i < 100; i++) {
-            starVertex.addEdge("knows", starGraph.addVertex(T.id, "person/" + UUID.randomUUID(), T.label, "person", "name", new UUID(random.nextLong(), random.nextLong()), "since", random.nextLong()), T.id, "knows/" + UUID.randomUUID());
-            starGraph.addVertex(T.id, "project/" + UUID.randomUUID(), T.label, "project").addEdge("developedBy", starVertex, T.id, "developedBy/" + UUID.randomUUID(), "public", random.nextBoolean());
+            starVertex.addEdge(
+                    "knows",
+                    starGraph.addVertex(T.id, UUID.randomUUID().toString(), T.label, "person", "name", new UUID(random.nextLong(), random.nextLong()), "since", random.nextLong()),
+                    T.id,  UUID.randomUUID().toString()
+            );
+            starGraph
+                    .addVertex(T.id,  UUID.randomUUID().toString(), T.label, "project")
+                    .addEdge("developedBy", starVertex, T.id, UUID.randomUUID().toString(), "public", random.nextBoolean());
         }
-        final DetachedVertex detachedVertex = DetachedFactory.detach(starGraph.getStarVertex(), true);
-        final Vertex createdVertex = detachedVertex.attach(Attachable.Method.create(graph));
-        TestHelper.validateVertexEquality(detachedVertex, createdVertex, false);
-        TestHelper.validateVertexEquality(detachedVertex, starVertex, false);
-
-        starGraph.getStarVertex().edges(Direction.BOTH).forEachRemaining(starEdge -> {
-            final DetachedEdge detachedEdge = DetachedFactory.detach(starEdge, true);
-            final Edge createdEdge = detachedEdge.attach(Attachable.Method.create(random.nextBoolean() ? graph : createdVertex));
-            TestHelper.validateEdgeEquality(detachedEdge, starEdge);
-            TestHelper.validateEdgeEquality(detachedEdge, createdEdge);
-        });
-
+        final Vertex createdVertex = starGraph.getStarVertex().attach(Attachable.Method.create(graph));
+        starGraph.getStarVertex().edges(Direction.BOTH).forEachRemaining(edge -> ((Attachable<Edge>) edge).attach(Attachable.Method.create(random.nextBoolean() ? graph : createdVertex)));
+        TestHelper.validateEquality(starVertex, createdVertex);
     }
+
 }

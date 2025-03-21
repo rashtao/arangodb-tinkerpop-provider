@@ -1,4 +1,4 @@
-package com.arangodb.tinkerpop.gremlin;
+package com.arangodb.tinkerpop.gremlin.complex;
 
 import com.arangodb.tinkerpop.gremlin.structure.ArangoDBGraph;
 import org.apache.commons.configuration2.Configuration;
@@ -7,43 +7,38 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 @Graph.OptIn(Graph.OptIn.SUITE_STRUCTURE_STANDARD)
 @Graph.OptIn(Graph.OptIn.SUITE_PROCESS_STANDARD)
 @Graph.OptIn("com.arangodb.tinkerpop.gremlin.complex.custom.CustomStandardSuite")
-@Graph.OptIn("com.arangodb.tinkerpop.gremlin.simple.custom.CustomStandardSuite")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.structure.util.detached.DetachedGraphTest",
         method = "testAttachableCreateMethod",
-        reason = "replaced by com.arangodb.tinkerpop.gremlin.custom.structure.util.detached.DetachedGraphTest#testAttachableCreateMethod()")
+        reason = "tested with simple graph only")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.structure.GraphTest",
         method = "shouldAddVertexWithUserSuppliedStringId",
-        reason = "replaced by com.arangodb.tinkerpop.gremlin.custom.structure.GraphTest#shouldAddVertexWithUserSuppliedStringId()")
+        reason = "tested with simple graph only")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.structure.GraphTest",
         method = "shouldRemoveVertices",
-        reason = "FIXME: DE-998")
+        reason = "tested with simple graph only")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.structure.GraphTest",
         method = "shouldRemoveEdges",
-        reason = "FIXME: DE-998")
+        reason = "tested with simple graph only")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.structure.GraphTest",
         method = "shouldEvaluateConnectivityPatterns",
-        reason = "replaced by com.arangodb.tinkerpop.gremlin.custom.structure.GraphTest#shouldEvaluateConnectivityPatterns()")
+        reason = "tested with simple graph only")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.structure.util.star.StarGraphTest",
         method = "shouldAttachWithCreateMethod",
-        reason = "replaced by com.arangodb.tinkerpop.gremlin.custom.structure.util.star.StarGraphTest.shouldAttachWithCreateMethod")
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.structure.util.star.StarGraphTest",
-        method = "shouldCopyFromGraphAToGraphB",
-        reason = "replaced by com.arangodb.tinkerpop.gremlin.custom.structure.util.star.StarGraphTest.shouldCopyFromGraphAToGraphB")
+        reason = "tested with simple graph only")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.structure.VertexTest$AddEdgeTest",
         method = "shouldAddEdgeWithUserSuppliedStringId",
-        reason = "replaced by com.arangodb.tinkerpop.gremlin.custom.structure.VertexTest.AddEdgeTest#shouldAddEdgeWithUserSuppliedStringId()")
+        reason = "tested with simple graph only")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MergeEdgeTest$Traversals",
         method = "*",
-        reason = "replaced by com.arangodb.tinkerpop.gremlin.custom.process.traversal.step.map.MergeEdgeTest")
+        reason = "tested with simple graph only")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MergeVertexTest$Traversals",
         method = "g_withSideEffectXc_label_person_name_markoX_withSideEffectXm_age_19X_mergeVXselectXcXX_optionXonMatch_selectXmXX_option",
@@ -76,14 +71,18 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.OrderabilityTest$Traversals",
         method = "g_V_out_outE_asXheadX_path_order_byXdescX_selectXheadX",
         reason = "requires numeric ids support")
-public class TestGraph extends ArangoDBGraph {
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.OrderabilityTest$Traversals",
+        method = "g_V_out_out_properties_asXheadX_path_order_byXascX_selectXheadX_value",
+        reason = "requires numeric ids support")
+public class ComplexTestGraph extends ArangoDBGraph {
 
     @SuppressWarnings("unused")
-    public static TestGraph open(Configuration configuration) {
-        return new TestGraph(configuration);
+    public static ComplexTestGraph open(Configuration configuration) {
+        return new ComplexTestGraph(configuration);
     }
 
-    public TestGraph(Configuration configuration) {
+    public ComplexTestGraph(Configuration configuration) {
         super(configuration);
     }
 }

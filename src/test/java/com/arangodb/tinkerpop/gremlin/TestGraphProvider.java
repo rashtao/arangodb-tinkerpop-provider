@@ -29,14 +29,6 @@ public abstract class TestGraphProvider extends AbstractGraphProvider {
                                                final String testMethodName,
                                                final Map<String, Object> configurationOverrides,
                                                final LoadGraphWith.GraphData loadGraphWith) {
-        return getConfiguration(graphName, test, testMethodName, loadGraphWith);
-    }
-
-    private Configuration getConfiguration(
-            String graphName,
-            Class<?> test,
-            String testMethodName,
-            LoadGraphWith.GraphData loadGraphWith) {
         System.out.println(test.getName() + "#" + testMethodName);
         ArangoDBConfigurationBuilder builder = new ArangoDBConfigurationBuilder()
                 .arangoHosts("127.0.0.1:8529")
@@ -45,9 +37,7 @@ public abstract class TestGraphProvider extends AbstractGraphProvider {
                 .dataBase(dbName)
                 .graph(graphName);
         configure(builder, test, testMethodName, loadGraphWith);
-        Configuration conf = builder.build();
-        conf.setProperty(Graph.GRAPH, TestGraph.class.getName());
-        return conf;
+        return builder.build();
     }
 
     @Override
