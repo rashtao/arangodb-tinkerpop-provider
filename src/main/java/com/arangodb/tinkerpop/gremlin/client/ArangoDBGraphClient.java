@@ -13,6 +13,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.arangodb.*;
 import com.arangodb.config.ArangoConfigProperties;
@@ -23,10 +24,7 @@ import com.arangodb.tinkerpop.gremlin.persistence.*;
 import com.arangodb.tinkerpop.gremlin.structure.*;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalInterruptedException;
 import org.apache.tinkerpop.gremlin.structure.Direction;
@@ -35,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.arangodb.tinkerpop.gremlin.utils.ArangoDBUtil.getArangoDirectionFromGremlinDirection;
+import static java.util.stream.Collectors.groupingBy;
 
 /**
  * The arangodb graph client class handles the HTTP connection to arangodb and performs database
@@ -136,7 +135,11 @@ public class ArangoDBGraphClient {
                 .loadProperties(ArangoConfigProperties.fromProperties(properties))
                 .build()
                 .db(dbname);
-        JacksonSerde serde = (JacksonSerde) db.getSerde().getUserSerde();
+        ((JacksonSerde) db.getSerde().getUserSerde()).configure(mapper ->
+                mapper.registerModule(createSerdeModule(graph)));
+    }
+
+    private Module createSerdeModule(ArangoDBGraph graph) {
         SimpleModule module = new SimpleModule();
         module.addSerializer(ElementId.class, new JsonSerializer<ElementId>() {
             @Override
@@ -152,10 +155,10 @@ public class ArangoDBGraphClient {
         module.addDeserializer(ElementId.class, new JsonDeserializer<ElementId>() {
             @Override
             public ElementId deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-                return graph.getIdFactory().parse(p.getText());
+                return graph.getIdFactory().parseId(p.getText());
             }
         });
-        serde.configure(mapper -> mapper.registerModule(module));
+        return module;
     }
 
     /**
@@ -269,7 +272,7 @@ public class ArangoDBGraphClient {
     // FIXME: use multi-docs API
     public ArangoIterable<VertexData> getGraphVertices(final List<ElementId> ids) {
         logger.debug("Get all {} graph vertices, filtered by ids: {}", graph.name(), ids);
-        return getGraphDocuments(ids, graph.prefixedVertexCollections, VertexData.class);
+        return getGraphDocuments(ids, graph.getPrefixedVertexCollections(), VertexData.class);
     }
 
     /**
@@ -281,7 +284,7 @@ public class ArangoDBGraphClient {
     // FIXME: use multi-docs API
     public ArangoIterable<EdgeData> getGraphEdges(List<ElementId> ids) {
         logger.debug("Get all {} graph edges, filtered by ids: {}", graph.name(), ids);
-        return getGraphDocuments(ids, graph.prefixedEdgeCollections, EdgeData.class);
+        return getGraphDocuments(ids, graph.getPrefixedEdgeCollections(), EdgeData.class);
     }
 
     private <V> ArangoIterable<V> getGraphDocuments(List<ElementId> ids, List<String> prefixedColNames, Class<V> clazz) {
@@ -316,13 +319,34 @@ public class ArangoDBGraphClient {
      */
 
     public ArangoGraph createGraph(String name,
+                                   List<String> vertexCollections,
                                    List<EdgeDefinition> edgeDefinitions,
                                    GraphCreateOptions options)
             throws ArangoDBGraphException {
         logger.debug("Creating graph {}", name);
+        List<EdgeDefinition> mergedEdgeDefinitions = edgeDefinitions.stream()
+                .collect(groupingBy(EdgeDefinition::getCollection))
+                .entrySet().stream()
+                .map(it -> {
+                    String[] froms = it.getValue().stream().flatMap(x -> x.getFrom().stream()).toArray(String[]::new);
+                    String[] tos = it.getValue().stream().flatMap(x -> x.getTo().stream()).toArray(String[]::new);
+                    return new EdgeDefinition()
+                            .collection(it.getKey())
+                            .from(froms)
+                            .to(tos);
+                })
+                .collect(Collectors.toList());
+
+        Set<String> vColsFromEdges = mergedEdgeDefinitions.stream()
+                .flatMap(it -> Stream.concat(it.getFrom().stream(), it.getTo().stream()))
+                .collect(Collectors.toSet());
+        String[] orphanCollections = vertexCollections.stream()
+                .filter(it -> !vColsFromEdges.contains(it)).toArray(String[]::new);
+        options.orphanCollections(orphanCollections);
+
         try {
             logger.debug("Creating graph in database.");
-            db.createGraph(name, edgeDefinitions, options);
+            db.createGraph(name, mergedEdgeDefinitions, options);
         } catch (ArangoDBException e) {
             logger.debug("Error creating graph in database.", e);
             throw ArangoDBExceptions.getArangoDBException(e);

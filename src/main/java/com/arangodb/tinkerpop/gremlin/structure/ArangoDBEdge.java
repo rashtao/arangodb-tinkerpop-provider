@@ -30,15 +30,9 @@ import java.util.*;
 
 public class ArangoDBEdge extends ArangoDBSimpleElement<EdgeData> implements Edge, ArangoDBPersistentElement {
 
-    private static String inferLabel(String label, ElementId id) {
-        if (label != null) {
-            return label;
-        }
-        return Optional.ofNullable(id.getLabel()).orElse(Edge.DEFAULT_LABEL);
-    }
-
     public static ArangoDBEdge of(String label, ElementId id, ElementId outVertexId, ElementId inVertexId, ArangoDBGraph graph) {
-        return new ArangoDBEdge(graph, EdgeData.of(inferLabel(label, id), id, outVertexId, inVertexId));
+        String inferredLabel = label != null ? label : Optional.ofNullable(id.getLabel()).orElse(Edge.DEFAULT_LABEL);
+        return new ArangoDBEdge(graph, EdgeData.of(inferredLabel, id, outVertexId, inVertexId));
     }
 
     public ArangoDBEdge(ArangoDBGraph graph, EdgeData data) {

@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 import com.arangodb.entity.EdgeDefinition;
 import com.arangodb.tinkerpop.gremlin.persistence.ElementId;
 import com.arangodb.tinkerpop.gremlin.persistence.ElementIdFactory;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ConfigurationConverter;
 import org.apache.commons.lang3.StringUtils;
@@ -338,20 +337,6 @@ public class ArangoDBGraph implements Graph {
     public static final String GRAPH_VARIABLES_COLLECTION = "TINKERPOP-GRAPH-VARIABLES";
 
     /**
-     * The Constant ELEMENT_PROPERTIES_COLLECTION.
-     */
-
-    public static final String ELEMENT_PROPERTIES_COLLECTION = "ELEMENT-PROPERTIES";
-
-    /**
-     * The Constant ELEMENT_PROPERTIES_EDGE_COLLECTION.
-     */
-
-    public static final String ELEMENT_PROPERTIES_EDGE_COLLECTION = "ELEMENT-HAS-PROPERTIES";
-
-    public static Set<String> GRAPH_COLLECTIONS = new HashSet<>(Arrays.asList(ELEMENT_PROPERTIES_EDGE_COLLECTION, ELEMENT_PROPERTIES_COLLECTION));
-
-    /**
      * The features.
      */
 
@@ -375,17 +360,13 @@ public class ArangoDBGraph implements Graph {
      * The vertex collections.
      */
 
-    private final List<String> vertexCollections;
-
-    public final List<String> prefixedVertexCollections;
+    private final List<String> prefixedVertexCollections;
 
     /**
      * The edge collections.
      */
 
-    public final List<String> edgeCollections;
-
-    public final List<String> prefixedEdgeCollections;
+    private final List<String> prefixedEdgeCollections;
 
     /**
      * The relations.
@@ -405,7 +386,7 @@ public class ArangoDBGraph implements Graph {
      */
     private final boolean shouldPrefixCollectionNames;
 
-    public final boolean simpleGraph;
+    private final boolean simpleGraph;
 
     /**
      * Create a new ArangoDBGraph from the provided configuration.
@@ -430,64 +411,54 @@ public class ArangoDBGraph implements Graph {
         Configuration arangoConfig = configuration.subset(PROPERTY_KEY_PREFIX);
         name = arangoConfig.getString(PROPERTY_KEY_GRAPH_NAME);
         shouldPrefixCollectionNames = arangoConfig.getBoolean(PROPERTY_KEY_SHOULD_PREFIX_COLLECTION_NAMES, true);
-        vertexCollections = arangoConfig.getList(PROPERTY_KEY_VERTICES).stream()
+        prefixedVertexCollections = arangoConfig.getList(PROPERTY_KEY_VERTICES).stream()
                 .map(String.class::cast)
-                .collect(Collectors.toList());
-        if (vertexCollections.isEmpty()) {
-            logger.warn("Empty vertexes collection(s), the default 'vertex' collection will be used.");
-            vertexCollections.add(DEFAULT_VERTEX_COLLECTION);
-        }
-        prefixedVertexCollections = vertexCollections.stream()
                 .map(this::getPrefixedCollectionName)
                 .collect(Collectors.toList());
-        edgeCollections = arangoConfig.getList(PROPERTY_KEY_EDGES).stream()
+        prefixedEdgeCollections =  arangoConfig.getList(PROPERTY_KEY_EDGES).stream()
                 .map(String.class::cast)
-                .collect(Collectors.toList());
-        if (edgeCollections.isEmpty()) {
-            logger.warn("Empty edges collection(s), the default 'edge' collection will be used.");
-            edgeCollections.add(DEFAULT_EDGE_COLLECTION);
-        }
-        prefixedEdgeCollections = edgeCollections.stream()
                 .map(this::getPrefixedCollectionName)
                 .collect(Collectors.toList());
         relations = arangoConfig.getList(PROPERTY_KEY_RELATIONS).stream()
                 .map(String.class::cast)
                 .collect(Collectors.toList());
-        checkValues(arangoConfig.getString(PROPERTY_KEY_DB_NAME), name, vertexCollections, edgeCollections, relations);
+        checkValues(arangoConfig.getString(PROPERTY_KEY_DB_NAME), name);
         simpleGraph = arangoConfig.getBoolean(SIMPLE_GRAPH, false);
 
         Properties arangoProperties = ConfigurationConverter.getProperties(arangoConfig);
         client = new ArangoDBGraphClient(this, arangoProperties, arangoConfig.getString(PROPERTY_KEY_DB_NAME));
-        idFactory = new ElementIdFactory(name, simpleGraph, Vertex.DEFAULT_LABEL, Edge.DEFAULT_LABEL);
+        idFactory = new ElementIdFactory(name, simpleGraph);
 
         final List<EdgeDefinition> edgeDefinitions = new ArrayList<>();
-        final List<String> prefVCols;
-        final List<String> prefECols;
         if (simpleGraph) {
-            prefVCols = Collections.singletonList(getPrefixedCollectionName("vertex"));
-            prefECols = Collections.singletonList(getPrefixedCollectionName("edge"));
-            edgeDefinitions.addAll(ArangoDBUtil.createDefaultEdgeDefinitions(prefVCols, prefECols));
+            prefixedVertexCollections.add(getPrefixedCollectionName(DEFAULT_VERTEX_COLLECTION));
+            prefixedEdgeCollections.add(getPrefixedCollectionName(DEFAULT_EDGE_COLLECTION));
+            edgeDefinitions.add(new EdgeDefinition()
+                    .collection(getPrefixedCollectionName(DEFAULT_EDGE_COLLECTION))
+                    .from(getPrefixedCollectionName(DEFAULT_VERTEX_COLLECTION))
+                    .to(getPrefixedCollectionName(DEFAULT_VERTEX_COLLECTION)));
         } else {
             // FIXME Cant be in orphan collections because it will be deleted with graph?
             // options.orphanCollections(GRAPH_VARIABLES_COLLECTION);
-            prefVCols = vertexCollections.stream().map(this::getPrefixedCollectionName).collect(Collectors.toList());
-            prefECols = edgeCollections.stream().map(this::getPrefixedCollectionName).collect(Collectors.toList());
-            if (relations.isEmpty()) {
-                logger.info("No relations, creating default ones.");
-                edgeDefinitions.addAll(ArangoDBUtil.createDefaultEdgeDefinitions(prefVCols, prefECols));
-            } else {
-                for (String value : relations) {
-                    EdgeDefinition ed = ArangoDBUtil.relationPropertyToEdgeDefinition(this, value);
-                    edgeDefinitions.add(ed);
+            for (String value : relations) {
+                EdgeDefinition ed = ArangoDBUtil.relationPropertyToEdgeDefinition(this, value);
+                edgeDefinitions.add(ed);
+            }
+            // check whether all edge collections are in edge definitions
+            Set<String> edgeColsInDefs = edgeDefinitions.stream()
+                    .map(EdgeDefinition::getCollection)
+                    .collect(Collectors.toSet());
+            for (String ec : prefixedEdgeCollections) {
+                if (!edgeColsInDefs.contains(ec)) {
+                    throw new IllegalArgumentException("FIXME");
                 }
             }
-            edgeDefinitions.add(ArangoDBUtil.createPropertyEdgeDefinitions(this, prefVCols, prefECols));
         }
 
         ArangoGraph graph = client.getArangoGraph();
         GraphCreateOptions options = new GraphCreateOptions();
         if (graph.exists()) {
-            ArangoDBUtil.checkGraphForErrors(prefVCols, prefECols, edgeDefinitions, graph, options);
+            ArangoDBUtil.checkGraphForErrors(prefixedVertexCollections, prefixedEdgeCollections, edgeDefinitions, graph, options);
             ArangoDBGraphVariables variables = null;
             try {
                 variables = client.getGraphVariables();
@@ -508,7 +479,7 @@ public class ArangoDBGraph implements Graph {
                 }
             }
         } else {
-            graph = client.createGraph(name, edgeDefinitions, options);
+            graph = client.createGraph(name, prefixedVertexCollections, edgeDefinitions, options);
             this.name = graph.name();
             ArangoDBGraphVariables variables = new ArangoDBGraphVariables(name, GRAPH_VARIABLES_COLLECTION, this);
             client.insertGraphVariables(variables);
@@ -516,11 +487,23 @@ public class ArangoDBGraph implements Graph {
         this.configuration = configuration;
     }
 
+    public List<String> getPrefixedEdgeCollections() {
+        return prefixedEdgeCollections;
+    }
+
+    public List<String> getPrefixedVertexCollections() {
+        return prefixedVertexCollections;
+    }
+
+    public boolean isSimpleGraph() {
+        return simpleGraph;
+    }
+
     @Override
     public Vertex addVertex(Object... keyValues) {
         ElementHelper.legalPropertyKeyValueArray(keyValues);
         String label = ElementHelper.getLabelValue(keyValues).orElse(null);
-        ElementId id = idFactory.createVertexId(features().vertex(), label, keyValues);
+        ElementId id = idFactory.createVertexId(label, keyValues);
         ArangoDBVertex vertex = ArangoDBVertex.of(label, id, this);
         if (!prefixedVertexCollections.contains(vertex.collection())) {
             throw new IllegalArgumentException(String.format("Vertex collection (%s) not in graph (%s).", vertex.collection(), name));
@@ -537,17 +520,11 @@ public class ArangoDBGraph implements Graph {
      *
      * @param db        the db
      * @param name      the name
-     * @param vertices  the vertices
-     * @param edges     the edges
-     * @param relations the relations
      */
 
     private void checkValues(
             String db,
-            String name,
-            List<String> vertices,
-            List<String> edges,
-            List<String> relations) {
+            String name) {
 
         if (StringUtils.isBlank(db)) {
             throw new ArangoDBGraphException("The db name can not be empty/null. Check that your configuration file " +
@@ -556,9 +533,6 @@ public class ArangoDBGraph implements Graph {
         if (StringUtils.isBlank(name)) {
             throw new ArangoDBGraphException("The graph name can not be empty/null. Check that your configuration file " +
                     "has a 'graph.name' name setting.");
-        }
-        if ((vertices.size() > 1) && (edges.size() > 1) && CollectionUtils.isEmpty(relations)) {
-            throw new ArangoDBGraphException("If more than one vertex/edge collection is provided, relations must be defined");
         }
     }
 
@@ -672,31 +646,24 @@ public class ArangoDBGraph implements Graph {
 
     @Override
     public String toString() {
-        String vertices = vertexCollections.stream()
+        String vertices = prefixedVertexCollections.stream()
+                .map(it -> it.replaceFirst("^" + name + "_", ""))
                 .map(vc -> String.format("\"%s\"", vc))
                 .collect(Collectors.joining(", ", "{", "}"));
-        String edges = edgeCollections.stream()
+        String edges = prefixedEdgeCollections.stream()
+                .map(it -> it.replaceFirst("^" + name + "_", ""))
                 .map(vc -> String.format("\"%s\"", vc))
                 .collect(Collectors.joining(", ", "{", "}"));
-        String relations = relations().stream()
+        String rels = relations.stream()
                 .map(vc -> String.format("\"%s\"", vc))
                 .collect(Collectors.joining(", ", "{", "}"));
         String internal = "{"
                 + "\"name\":\"" + name() + "\","
                 + "\"vertices\":" + vertices + ","
                 + "\"edges\":" + edges + ","
-                + "\"relations\":" + relations
+                + "\"relations\":" + rels
                 + "}";
         return StringFactory.graphString(this, internal);
-    }
-
-    /**
-     * The graph relations.
-     *
-     * @return the collection of relations
-     */
-    private Collection<String> relations() {
-        return relations;
     }
 
 }

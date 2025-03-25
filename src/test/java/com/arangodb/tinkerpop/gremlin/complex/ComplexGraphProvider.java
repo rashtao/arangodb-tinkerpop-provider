@@ -2,6 +2,7 @@ package com.arangodb.tinkerpop.gremlin.complex;
 
 import com.arangodb.tinkerpop.gremlin.TestGraphProvider;
 
+import com.arangodb.tinkerpop.gremlin.arangodb.ElementIdTest;
 import com.arangodb.tinkerpop.gremlin.utils.ArangoDBConfigurationBuilder;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.tinkerpop.gremlin.LoadGraphWith;
@@ -27,6 +28,11 @@ public class ComplexGraphProvider extends TestGraphProvider {
 
     @Override
     protected void configure(ArangoDBConfigurationBuilder builder, Class<?> test, String testMethodName, LoadGraphWith.GraphData loadGraphWith) {
+        // add default vertex and edge cols
+        builder.withVertexCollection("vertex");
+        builder.withEdgeCollection("edge");
+        builder.configureEdge("edge", "vertex", "vertex");
+
         if (loadGraphWith != null) {
             switch (loadGraphWith) {
                 case CLASSIC:
@@ -39,7 +45,6 @@ public class ComplexGraphProvider extends TestGraphProvider {
                 case MODERN:
                     System.out.println("MODERN");
                     builder.withVertexCollection("name");
-                    builder.withVertexCollection("vertex");
                     builder.withVertexCollection("animal");
                     builder.withVertexCollection("dog");
                     builder.withVertexCollection("software");
@@ -70,7 +75,6 @@ public class ComplexGraphProvider extends TestGraphProvider {
                     break;
                 case GRATEFUL:
                     System.out.println("GRATEFUL");
-                    builder.withVertexCollection("vertex");
                     builder.withVertexCollection("song");
                     builder.withVertexCollection("artist");
                     builder.withEdgeCollection("followedBy");
@@ -91,33 +95,45 @@ public class ComplexGraphProvider extends TestGraphProvider {
                     break;
             }
         } else {
-            if (test == CommunityGeneratorTest.DifferentDistributionsTest.class
+            if (test == ElementIdTest.class) {
+                builder.withVertexCollection("foo");
+            } else if (test == CommunityGeneratorTest.DifferentDistributionsTest.class
                     || test == DistributionGeneratorTest.DifferentDistributionsTest.class) {
                 builder.withEdgeCollection("knows");
+                builder.configureEdge("knows", "vertex", "vertex");
             } else if (testMethodName.startsWith("shouldProcessVerticesEdges")
                     || testMethodName.startsWith("shouldSetValueOnEdge")
                     || testMethodName.startsWith("shouldAutotype")) {
                 builder.withEdgeCollection("knows");
+                builder.configureEdge("knows", "vertex", "vertex");
             } else if (testMethodName.startsWith("shouldIterateEdgesWithStringIdSupport")) {
                 builder.withEdgeCollection("self");
+                builder.configureEdge("self", "vertex", "vertex");
             } else if (testMethodName.startsWith("shouldSupportUserSuppliedIds")) {
                 builder.withEdgeCollection("test");
+                builder.configureEdge("test", "vertex", "vertex");
             } else if (testMethodName.startsWith("shouldSupportUUID")) {
                 builder.withVertexCollection("person");
                 builder.withEdgeCollection("friend");
+                builder.configureEdge("friend", "person", "person");
             } else if (testMethodName.startsWith("shouldReadWriteDetachedEdge")) {
                 builder.withVertexCollection("person");
                 builder.withEdgeCollection("friend");
+                builder.configureEdge("friend", "person", "person");
             } else if (testMethodName.startsWith("shouldReadWriteDetachedEdgeAsReference")) {
                 builder.withVertexCollection("person");
                 builder.withEdgeCollection("friend");
+                builder.configureEdge("friend", "person", "person");
             } else if (testMethodName.startsWith("shouldReadWriteEdge")) {
                 builder.withVertexCollection("person");
                 builder.withEdgeCollection("friend");
+                builder.configureEdge("friend", "person", "person");
             } else if (testMethodName.startsWith("shouldThrowOnGraphEdgeSetPropertyStandard")) {
                 builder.withEdgeCollection("self");
+                builder.configureEdge("self", "vertex", "vertex");
             } else if (testMethodName.startsWith("shouldThrowOnGraphAddEdge")) {
                 builder.withEdgeCollection("self");
+                builder.configureEdge("self", "vertex", "vertex");
             } else if (testMethodName.startsWith("shouldReadWriteVerticesNoEdgesToGryoManual") ||
                     testMethodName.startsWith("shouldReadWriteVertexWithBOTHEdges") ||
                     testMethodName.startsWith("shouldReadWriteVerticesNoEdgesToGraphSONManual") ||
@@ -128,7 +144,6 @@ public class ComplexGraphProvider extends TestGraphProvider {
                     testMethodName.startsWith("shouldReadWriteVertexNoEdges") ||
                     testMethodName.startsWith("shouldReadWriteVertexWithOUTEdges") ||
                     testMethodName.startsWith("shouldReadWriteDetachedVertexNoEdges")) {
-                builder.withVertexCollection("vertex");
                 builder.withVertexCollection("person");
                 builder.withEdgeCollection("friends");
                 builder.configureEdge("friends", "person", "person");
@@ -139,22 +154,31 @@ public class ComplexGraphProvider extends TestGraphProvider {
                     case "shouldNotGetConcurrentModificationException":
                         builder.withEdgeCollection("friend");
                         builder.withEdgeCollection("knows");
+                        builder.configureEdge("friend", "vertex", "vertex");
+                        builder.configureEdge("knows", "vertex", "vertex");
                         break;
                     case "shouldTraverseInOutFromVertexWithMultipleEdgeLabelFilter":
                     case "shouldTraverseInOutFromVertexWithSingleEdgeLabelFilter":
                         builder.withEdgeCollection("hate");
                         builder.withEdgeCollection("friend");
+                        builder.configureEdge("hate", "vertex", "vertex");
+                        builder.configureEdge("friend", "vertex", "vertex");
                         break;
                     case "shouldPersistDataOnClose":
                         builder.withEdgeCollection("collaborator");
+                        builder.configureEdge("collaborator", "vertex", "vertex");
                         break;
                     case "shouldTestTreeConnectivity":
                         builder.withEdgeCollection("test1");
                         builder.withEdgeCollection("test2");
                         builder.withEdgeCollection("test3");
+                        builder.configureEdge("test1", "vertex", "vertex");
+                        builder.configureEdge("test2", "vertex", "vertex");
+                        builder.configureEdge("test3", "vertex", "vertex");
                         break;
                     case "shouldRemoveEdgesWithoutConcurrentModificationException":
                         builder.withEdgeCollection("link");
+                        builder.configureEdge("link", "vertex", "vertex");
                         break;
                     case "shouldGetValueThatIsNotPresentOnEdge":
                     case "shouldHaveStandardStringRepresentationForEdgeProperty":
@@ -165,6 +189,7 @@ public class ComplexGraphProvider extends TestGraphProvider {
                     case "shouldAllowNullAddEdge":
                     case "shouldAddEdgeWithUserSuppliedStringId":
                         builder.withEdgeCollection("self");
+                        builder.configureEdge("self", "vertex", "vertex");
                         break;
                     case "shouldAllowRemovalFromEdgeWhenAlreadyRemoved":
                     case "shouldRespectWhatAreEdgesAndWhatArePropertiesInMultiProperties":
@@ -172,19 +197,27 @@ public class ComplexGraphProvider extends TestGraphProvider {
                     case "shouldReturnOutThenInOnVertexIterator":
                     case "shouldReturnEmptyIteratorIfNoProperties":
                         builder.withEdgeCollection("knows");
+                        builder.configureEdge("knows", "vertex", "vertex");
                         break;
                     case "shouldNotHaveAConcurrentModificationExceptionWhenIteratingAndRemovingAddingEdges":
                         builder.withEdgeCollection("knows");
                         builder.withEdgeCollection("pets");
                         builder.withEdgeCollection("walks");
                         builder.withEdgeCollection("livesWith");
+                        builder.configureEdge("knows", "vertex", "vertex");
+                        builder.configureEdge("pets", "vertex", "vertex");
+                        builder.configureEdge("walks", "vertex", "vertex");
+                        builder.configureEdge("livesWith", "vertex", "vertex");
                         break;
                     case "shouldHaveStandardStringRepresentation":
                         builder.withEdgeCollection("friends");
+                        builder.configureEdge("friends", "vertex", "vertex");
                         break;
                     case "shouldReadWriteSelfLoopingEdges":
                         builder.withEdgeCollection("CONTROL");
                         builder.withEdgeCollection("SELFLOOP");
+                        builder.configureEdge("CONTROL", "vertex", "vertex");
+                        builder.configureEdge("SELFLOOP", "vertex", "vertex");
                         break;
                     case "shouldReadGraphML":
                     case "shouldReadGraphMLUnorderedElements":
@@ -192,6 +225,8 @@ public class ComplexGraphProvider extends TestGraphProvider {
                     case "shouldReadLegacyGraphSON":
                         builder.withEdgeCollection("knows");
                         builder.withEdgeCollection("created");
+                        builder.configureEdge("knows", "vertex", "vertex");
+                        builder.configureEdge("created", "vertex", "vertex");
                         break;
                     case "shouldAddVertexWithLabel":
                     case "shouldAllowNullAddVertexProperty":
@@ -203,17 +238,19 @@ public class ComplexGraphProvider extends TestGraphProvider {
                     case "shouldNotConstructNewWithSomethingAlreadyDetached":
                     case "shouldNotConstructNewWithSomethingAlreadyReferenced":
                         builder.withEdgeCollection("test");
+                        builder.configureEdge("test", "vertex", "vertex");
                         break;
                     case "shouldHaveExceptionConsistencyWhenUsingNullVertex":
                         builder.withEdgeCollection("tonothing");
+                        builder.configureEdge("tonothing", "vertex", "vertex");
                         break;
                     case "shouldHandleSelfLoops":
                         builder.withVertexCollection("person");
                         builder.withEdgeCollection("self");
+                        builder.configureEdge("self", "person", "person");
                         break;
                     case "testAttachableCreateMethod":
                     case "shouldAttachWithCreateMethod":
-                        builder.withVertexCollection("vertex");
                         builder.withVertexCollection("person");
                         builder.withVertexCollection("project");
                         builder.withEdgeCollection("knows");
@@ -239,9 +276,10 @@ public class ComplexGraphProvider extends TestGraphProvider {
                     case "shouldReadGraphMLWithCommonVertexAndEdgePropertyNames":
                         builder.withEdgeCollection("created");
                         builder.withEdgeCollection("knows");
+                        builder.configureEdge("created", "vertex", "vertex");
+                        builder.configureEdge("knows", "vertex", "vertex");
                         break;
                     case "shouldCopyFromGraphAToGraphB":
-                        builder.withVertexCollection("vertex");
                         builder.withVertexCollection("person");
                         builder.withVertexCollection("software");
                         builder.withEdgeCollection("knows");
@@ -252,9 +290,12 @@ public class ComplexGraphProvider extends TestGraphProvider {
                     case "shouldEvaluateConnectivityPatterns":
                         builder.withEdgeCollection("knows");
                         builder.withEdgeCollection("hates");
+                        builder.configureEdge("knows", "vertex", "vertex");
+                        builder.configureEdge("hates", "vertex", "vertex");
                         break;
                     case "g_addV_asXfirstX_repeatXaddEXnextX_toXaddVX_inVX_timesX5X_addEXnextX_toXselectXfirstXX":
                         builder.withEdgeCollection("next");
+                        builder.configureEdge("next", "vertex", "vertex");
                         break;
                     case "shouldGenerateDefaultIdOnAddEWithSpecifiedId":
                     case "shouldSetIdOnAddEWithNamePropertyKeySpecifiedAndNameSuppliedAsProperty":
@@ -295,6 +336,15 @@ public class ComplexGraphProvider extends TestGraphProvider {
                         builder.withEdgeCollection("connectsTo");
                         builder.withEdgeCollection("knows");
                         builder.withEdgeCollection("relatesTo");
+                        builder.configureEdge("self", "vertex", "vertex");
+                        builder.configureEdge("self-but-different", "vertex", "vertex");
+                        builder.configureEdge("aTOa", "vertex", "vertex");
+                        builder.configureEdge("aTOb", "vertex", "vertex");
+                        builder.configureEdge("aTOc", "vertex", "vertex");
+                        builder.configureEdge("bTOc", "vertex", "vertex");
+                        builder.configureEdge("connectsTo", "vertex", "vertex");
+                        builder.configureEdge("knows", "vertex", "vertex");
+                        builder.configureEdge("relatesTo", "vertex", "vertex");
                         break;
                     case "g_io_read_withXreader_graphsonX":
                     case "g_io_read_withXreader_gryoX":
@@ -335,12 +385,12 @@ public class ComplexGraphProvider extends TestGraphProvider {
                         break;
                     case "shouldAppendPartitionToAllVertexProperties":
                         builder.withVertexCollection("person");
-                        builder.withVertexCollection("vertex");
                         builder.configureEdge("edge", "person", "person");
                         break;
                     case "shouldPartitionWithAbstractLambdaChildTraversal":
                         builder.withVertexCollection("testV");
                         builder.withEdgeCollection("self");
+                        builder.configureEdge("self", "testV", "testV");
                         break;
                 }
             }

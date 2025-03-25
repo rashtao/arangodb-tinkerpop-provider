@@ -227,29 +227,6 @@ public class ArangoDBUtil {
     }
 
     /**
-     * Create the EdgeDefinition for the graph properties.
-     *
-     * @param graph             The graph
-     * @param vertexCollections the vertex collections
-     * @param edgeCollections   the edge collections
-     * @return the edge definition
-     */
-
-    public static EdgeDefinition createPropertyEdgeDefinitions(
-            final ArangoDBGraph graph,
-            final List<String> vertexCollections,
-            final List<String> edgeCollections) {
-        final List<String> from = new ArrayList<>(vertexCollections);
-        from.addAll(edgeCollections);
-        from.add(graph.getPrefixedCollectionName(ArangoDBGraph.ELEMENT_PROPERTIES_COLLECTION));
-        String[] f = from.toArray(new String[0]);
-        return new EdgeDefinition()
-                .collection(graph.getPrefixedCollectionName(ArangoDBGraph.ELEMENT_PROPERTIES_EDGE_COLLECTION))
-                .from(f)
-                .to(graph.getPrefixedCollectionName(ArangoDBGraph.ELEMENT_PROPERTIES_COLLECTION));
-    }
-
-    /**
      * Gets the correct primitive.
      *
      * @param value      the value

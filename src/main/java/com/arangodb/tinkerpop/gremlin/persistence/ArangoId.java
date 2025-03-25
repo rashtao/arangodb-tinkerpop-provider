@@ -20,11 +20,6 @@ class ArangoId implements ElementId {
     }
 
     @Override
-    public String getPrefix() {
-        return prefix;
-    }
-
-    @Override
     public String getLabel() {
         return collection;
     }

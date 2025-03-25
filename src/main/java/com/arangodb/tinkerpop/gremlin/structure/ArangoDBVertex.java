@@ -34,15 +34,9 @@ import static com.arangodb.tinkerpop.gremlin.structure.ArangoDBElement.Exception
 
 public class ArangoDBVertex extends ArangoDBElement<VertexPropertyData, VertexData> implements Vertex, ArangoDBPersistentElement {
 
-    private static String inferLabel(String label, ElementId id) {
-        if (label != null) {
-            return label;
-        }
-        return Optional.ofNullable(id.getLabel()).orElse(Vertex.DEFAULT_LABEL);
-    }
-
     public static ArangoDBVertex of(String label, ElementId id, ArangoDBGraph graph) {
-        return new ArangoDBVertex(graph, VertexData.of(inferLabel(label, id), id));
+        String inferredLabel = label != null ? label : Optional.ofNullable(id.getLabel()).orElse(Vertex.DEFAULT_LABEL);
+        return new ArangoDBVertex(graph, VertexData.of(inferredLabel, id));
     }
 
     public ArangoDBVertex(ArangoDBGraph graph, VertexData data) {
@@ -89,11 +83,11 @@ public class ArangoDBVertex extends ArangoDBElement<VertexPropertyData, VertexDa
 
         ElementHelper.legalPropertyKeyValueArray(keyValues);
         ElementHelper.validateLabel(label);
-        ElementId id = graph.getIdFactory().createEdgeId(graph.features().edge(), label, keyValues);
+        ElementId id = graph.getIdFactory().createEdgeId(label, keyValues);
         ElementId outVertexId = graph.getIdFactory().parseVertexId(id());
         ElementId inVertexId = graph.getIdFactory().parseVertexId(vertex.id());
         ArangoDBEdge edge = ArangoDBEdge.of(label, id, outVertexId, inVertexId, graph);
-        if (!graph.prefixedEdgeCollections.contains(edge.collection())) {
+        if (!graph.getPrefixedEdgeCollections().contains(edge.collection())) {
             throw new IllegalArgumentException(String.format("Edge collection (%s) not in graph (%s).", edge.collection(), graph.name()));
         }
 
@@ -179,12 +173,12 @@ public class ArangoDBVertex extends ArangoDBElement<VertexPropertyData, VertexDa
      * edgeLabels not in the graph.
      */
     private List<String> getQueryEdgeCollections(String... edgeLabels) {
-        if (graph.simpleGraph || edgeLabels.length == 0) {
-            return graph.prefixedEdgeCollections;
+        if (graph.isSimpleGraph() || edgeLabels.length == 0) {
+            return graph.getPrefixedEdgeCollections();
         }
         return Arrays.stream(edgeLabels)
-                .filter(graph.edgeCollections::contains)
                 .map(graph::getPrefixedCollectionName)
+                .filter(graph.getPrefixedEdgeCollections()::contains)
                 .collect(Collectors.toList());
     }
 }
