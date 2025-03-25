@@ -1,7 +1,7 @@
 package com.arangodb.tinkerpop.gremlin.persistence;
 
+import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Element;
-import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
 
@@ -16,14 +16,10 @@ import static com.arangodb.tinkerpop.gremlin.structure.ArangoDBElement.Exception
 public class ElementIdFactory {
     private final String prefix;
     private final boolean simpleGraph;
-    private final String defaultVertexLabel;
-    private final String defaultEdgeLabel;
 
-    public ElementIdFactory(String prefix, boolean simpleGraph, String defaultVertexLabel, String defaultEdgeLabel) {
+    public ElementIdFactory(String prefix, boolean simpleGraph) {
         this.prefix = prefix;
         this.simpleGraph = simpleGraph;
-        this.defaultVertexLabel = defaultVertexLabel;
-        this.defaultEdgeLabel = defaultEdgeLabel;
     }
 
     private String extractKey(final String id) {
@@ -33,6 +29,9 @@ public class ElementIdFactory {
 
     private String extractCollection(final String id) {
         String[] parts = id.replaceFirst("^" + prefix + "_", "").split("/");
+        if (parts.length > 2) {
+            throw new IllegalArgumentException(String.format("key (%s) contains invalid character '/'", id));
+        }
         return parts.length == 2 ? parts[0] : null;
     }
 
@@ -52,17 +51,17 @@ public class ElementIdFactory {
         return defaultLabel;
     }
 
-    public ElementId createVertexId(Graph.Features.ElementFeatures features, String label, Object[] keyValues) {
-        return createId(features, label, defaultVertexLabel, keyValues);
+    public ElementId createVertexId(String label, Object[] keyValues) {
+        return createId(label, Vertex.DEFAULT_LABEL, keyValues);
     }
 
-    public ElementId createEdgeId(Graph.Features.ElementFeatures features, String label, Object[] keyValues) {
-        return createId(features, label, defaultEdgeLabel, keyValues);
+    public ElementId createEdgeId(String label, Object[] keyValues) {
+        return createId(label, Edge.DEFAULT_LABEL, keyValues);
     }
 
     public ElementId parseVertexId(Object id) {
         if (id instanceof String) {
-            return parseWithDefaultLabel((String) id, defaultVertexLabel);
+            return parseWithDefaultLabel((String) id, Vertex.DEFAULT_LABEL);
         } else if (id instanceof Element) {
             return parseVertexId(((Element) id).id());
         } else {
@@ -78,7 +77,7 @@ public class ElementIdFactory {
 
     public ElementId parseEdgeId(Object id) {
         if (id instanceof String) {
-            return parseWithDefaultLabel((String) id, defaultEdgeLabel);
+            return parseWithDefaultLabel((String) id, Edge.DEFAULT_LABEL);
         } else if (id instanceof Element) {
             return parseEdgeId(((Element) id).id());
         } else {
@@ -92,7 +91,7 @@ public class ElementIdFactory {
                 .collect(Collectors.toList());
     }
 
-    public ElementId parse(String id) {
+    public ElementId parseId(String id) {
         String collection = extractCollection(id);
         String key = extractKey(id);
         return of(prefix, collection, key);
@@ -104,16 +103,32 @@ public class ElementIdFactory {
         return of(prefix, collection, key);
     }
 
-    private ElementId createId(Graph.Features.ElementFeatures features, String label, String defaultLabel, Object[] keyValues) {
+    private ElementId createId(String label, String defaultLabel, Object[] keyValues) {
         Optional<Object> optionalId = ElementHelper.getIdValue(keyValues);
         if (!optionalId.isPresent()) {
             return of(prefix, inferCollection(null, label, defaultLabel), null);
         }
         String id = optionalId
-                .filter(features::willAllowId)
+                .filter(String.class::isInstance)
                 .map(Object::toString)
                 .orElseThrow(Vertex.Exceptions::userSuppliedIdsOfThisTypeNotSupported);
+        validateId(id);
         return of(prefix, inferCollection(extractCollection(id), label, defaultLabel), extractKey(id));
+    }
+
+    private void validateId(String id) {
+        if (simpleGraph) {
+            if (id.contains("_")) {
+                throw new IllegalArgumentException(String.format("id (%s) contains invalid character '_'", id));
+            }
+            if (id.contains("/")) {
+                throw new IllegalArgumentException(String.format("id (%s) contains invalid character '/'", id));
+            }
+        } else {
+            if (id.contains("_")) {
+                throw new IllegalArgumentException(String.format("id (%s) contains invalid character '_'", id));
+            }
+        }
     }
 
     private ElementId of(String prefix, String collection, String key) {

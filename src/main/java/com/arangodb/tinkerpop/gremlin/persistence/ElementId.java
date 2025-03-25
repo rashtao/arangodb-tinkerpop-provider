@@ -4,8 +4,6 @@ public interface ElementId {
 
     ElementId withKey(String newKey);
 
-    String getPrefix();
-
     String getLabel();
 
     String getCollection();
