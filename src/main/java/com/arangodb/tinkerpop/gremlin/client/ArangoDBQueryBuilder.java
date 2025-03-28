@@ -31,8 +31,6 @@ public class ArangoDBQueryBuilder {
 	
 	private int iterateCnt = 1;
 
-	private final boolean filtered = false;
-
 	/**
 	 * Direction to navigate for vertex paths.
 	 */
@@ -99,7 +97,6 @@ public class ArangoDBQueryBuilder {
 			bindVars.put(varName, c);
 		}
 		queryBuilder.append("\n");
-		logger.debug("with", queryBuilder);
 		return this;
 	}
 	
@@ -151,7 +148,6 @@ public class ArangoDBQueryBuilder {
 		}
 		queryBuilder.append("  )\n");
 		queryBuilder.append(")\n");
-		logger.debug("union", queryBuilder);
 		return this;
 	}
 	
@@ -170,7 +166,6 @@ public class ArangoDBQueryBuilder {
 		String collectionName, Map<String, Object> bindVars) {
 		queryBuilder.append(String.format("FOR %1$s IN @@col%2$s", loopVariable, iterateCnt)).append("\n");
 		bindVars.put(String.format("@col%s", iterateCnt++), collectionName);
-		logger.debug("iterateCollection", queryBuilder);
 		return this;
 	}
 	

@@ -3,6 +3,7 @@ package com.arangodb.tinkerpop.gremlin.complex;
 import com.arangodb.entity.GraphEntity;
 import com.arangodb.tinkerpop.gremlin.DataDefinitionTest;
 import org.apache.commons.configuration2.Configuration;
+import org.apache.tinkerpop.gremlin.util.CollectionUtil;
 import org.junit.Test;
 
 import java.lang.reflect.InvocationTargetException;
@@ -101,6 +102,34 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
                 .withVertexCollection("a")
                 .withVertexCollection("v")
                 .withEdgeCollection("e")
+                .configureEdge("e", CollectionUtil.asSet("v", "a"), CollectionUtil.asSet("a", "v"))
+                .build();
+        GraphEntity graphInfo = createGraph(conf);
+        assertThat(graphInfo).isNotNull();
+        assertThat(graphInfo.getOrphanCollections()).isEmpty();
+        assertThat(graphInfo.getEdgeDefinitions())
+                .hasSize(1)
+                .allSatisfy(ed -> {
+                    assertThat(ed.getCollection()).isEqualTo(name + "_e");
+                    assertThat(ed.getFrom())
+                            .hasSize(2)
+                            .contains(name + "_a")
+                            .contains(name + "_v");
+                    assertThat(ed.getTo())
+                            .hasSize(2)
+                            .contains(name + "_a")
+                            .contains(name + "_v");
+                });
+    }
+
+    @Test
+    public void complexGraphWithManyEdgesCollectionsWithSameName() {
+        String name = "complexGraph";
+        Configuration conf = confBuilder()
+                .graph(name)
+                .withVertexCollection("a")
+                .withVertexCollection("v")
+                .withEdgeCollection("e")
                 .configureEdge("e", "v", "v")
                 .configureEdge("e", "a", "a")
                 .build();
@@ -123,7 +152,7 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
     }
 
     @Test
-    public void existingComplexGraphWithManyEdgesCollectionsInDifferentOrder() {
+    public void existingComplexGraphWithManyEdgesCollectionsWithSameNameInDifferentOrder() {
         String name = "complexGraph";
         createGraph(confBuilder()
                 .graph(name)
