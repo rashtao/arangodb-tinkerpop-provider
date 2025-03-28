@@ -8,16 +8,16 @@
 
 package com.arangodb.tinkerpop.gremlin.utils;
 
-import com.arangodb.ArangoGraph;
 import com.arangodb.entity.EdgeDefinition;
-import com.arangodb.entity.GraphEntity;
-import com.arangodb.model.GraphCreateOptions;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.arangodb.tinkerpop.gremlin.client.ArangoDBGraphException;
 import com.arangodb.tinkerpop.gremlin.client.ArangoDBQueryBuilder;
 import com.arangodb.tinkerpop.gremlin.structure.*;
+import com.arangodb.tinkerpop.gremlin.PackageVersion;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -133,7 +133,7 @@ public class ArangoDBUtil {
 
         @Override
         public int hash(EdgeDefinition o) {
-            return Objects.hash(o.getCollection(), new HashSet<>(o.getFrom()),new HashSet<>(o.getTo()));
+            return Objects.hash(o.getCollection(), new HashSet<>(o.getFrom()), new HashSet<>(o.getTo()));
         }
     }
 
@@ -154,6 +154,55 @@ public class ArangoDBUtil {
                 "to:" +
                 String.join(",", edgeDefinition.getTo()) +
                 "}";
+    }
+
+    public static void checkVersion(String version) {
+        if (new VersionComparator().compare(version, PackageVersion.VERSION) > 0) {
+            throw new IllegalStateException("Existing graph has more recent version [" + version +
+                    "] than library version [" + PackageVersion.VERSION + "].");
+        }
+
+    }
+
+    private static class VersionComparator implements Comparator<String> {
+        @Override
+        public int compare(String a, String b) {
+            Objects.requireNonNull(a);
+            Objects.requireNonNull(b);
+            Pattern versionPattern = Pattern.compile("^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*).*");
+
+            Matcher ma = versionPattern.matcher(a);
+            if (!ma.matches()) {
+                throw new IllegalArgumentException("Invalid version: " + a);
+            }
+            int aMajor = Integer.parseInt(ma.group(1));
+            int aMinor = Integer.parseInt(ma.group(2));
+            int aPatch = Integer.parseInt(ma.group(3));
+
+            Matcher mb = versionPattern.matcher(b);
+            if (!mb.matches()) {
+                throw new IllegalArgumentException("Invalid version: " + b);
+            }
+            int bMajor = Integer.parseInt(mb.group(1));
+            int bMinor = Integer.parseInt(mb.group(2));
+            int bPatch = Integer.parseInt(mb.group(3));
+
+            if (aMajor < bMajor) {
+                return -1;
+            }
+            if (aMajor > bMajor) {
+                return 1;
+            }
+
+            if (aMinor < bMinor) {
+                return -1;
+            }
+            if (aMinor > bMinor) {
+                return 1;
+            }
+
+            return Integer.compare(aPatch, bPatch);
+        }
     }
 
     /**

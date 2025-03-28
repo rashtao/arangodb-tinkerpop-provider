@@ -168,13 +168,12 @@ public class ArangoDBGraphClient {
         db.arango().shutdown();
     }
 
-    public ArangoDBGraphVariables getGraphVariables() {
+    public VariablesData getGraphVariables() {
         logger.debug("Get graph variables");
-        ArangoDBGraphVariables result;
         try {
-            result = db
+            return db
                     .collection(ArangoDBGraph.GRAPH_VARIABLES_COLLECTION)
-                    .getDocument(graph.name(), ArangoDBGraphVariables.class);
+                    .getDocument(graph.name(), VariablesData.class);
         } catch (ArangoDBException e) {
             // collection not found
             if (e.getErrorNum() == 1203) {
@@ -183,88 +182,37 @@ public class ArangoDBGraphClient {
             logger.error("Failed to retrieve graph variables: {}", e.getErrorMessage());
             throw new ArangoDBGraphException("Failed to retrieve graph variables.", e);
         }
-        // FIXME: review
-        if(result != null) {
-            result.collection(result.label);
-        }
-        return result;
     }
 
-    /**
-     * Insert a ArangoDBBaseDocument in the graph. The document is updated with the id, rev and name
-     * (if not * present)
-     *
-     * @param document the document
-     * @throws ArangoDBGraphException If there was an error inserting the document
-     */
-
-    public void insertGraphVariables(ArangoDBGraphVariables document) {
+    public VariablesData insertGraphVariables(VariablesData document) {
         logger.debug("Insert graph variables {} in {}", document, graph.name());
-        if (document.isPaired()) {
-            throw new ArangoDBGraphException("Paired docuements can not be inserted, only updated");
+        ArangoCollection col = db.collection(ArangoDBGraph.GRAPH_VARIABLES_COLLECTION);
+        if (!col.exists()) {
+            col.create();
         }
-        ArangoCollection gVars = db.collection(ArangoDBGraph.GRAPH_VARIABLES_COLLECTION);
-        if (!gVars.exists()) {
-            CollectionEntity ce = gVars.create();
-            System.out.println(ce.getStatus());
-        }
-        DocumentCreateEntity<?> vertexEntity;
         try {
-            vertexEntity = gVars.insertDocument(document);
+            col.insertDocument(document);
         } catch (ArangoDBException e) {
             logger.error("Failed to insert document: {}", e.getMessage());
             ArangoDBGraphException arangoDBException = ArangoDBExceptions.getArangoDBException(e);
             if (arangoDBException.getErrorCode() == 1210) {
-                throw Graph.Exceptions.vertexWithIdAlreadyExists(document._key);
+                throw Graph.Exceptions.vertexWithIdAlreadyExists(document.getKey());
             }
             throw arangoDBException;
         }
-        document._id(vertexEntity.getId());
-        document._rev(vertexEntity.getRev());
-        if (document._key() == null) {
-            document._key(vertexEntity.getKey());
-        }
-        document.setPaired(true);
+        return document;
     }
 
-    /**
-     * Delete a document from the graph.
-     *
-     * @param document the document to delete
-     * @throws ArangoDBGraphException If there was an error deleting the document
-     */
-
-    public void deleteGraphVariables(ArangoDBGraphVariables document) {
-        logger.debug("Delete variables {} in {}", document, graph.name());
-        try {
-            db.collection(document.collection())
-                    .deleteDocument(document._key());
-        } catch (ArangoDBException e) {
-            logger.error("Failed to delete document: {}", e.getErrorMessage());
-            throw ArangoDBExceptions.getArangoDBException(e);
-        }
-        document.setPaired(false);
-    }
-
-    /**
-     * Update the document in the graph.
-     *
-     * @param document the document
-     * @throws ArangoDBGraphException If there was an error updating the document
-     */
-
-    public void updateGraphVariables(ArangoDBGraphVariables document) {
+    public void updateGraphVariables(VariablesData document) {
         logger.debug("Update variables {} in {}", document, graph.name());
-        DocumentUpdateEntity<?> updateEntity;
         try {
-            updateEntity = db.collection(document.collection())
-                    .updateDocument(document._key(), document);
+            db
+                    .collection(ArangoDBGraph.GRAPH_VARIABLES_COLLECTION)
+                    .replaceDocument(document.getKey(), document);
         } catch (ArangoDBException e) {
             logger.error("Failed to update document: {}", e.getErrorMessage());
             throw ArangoDBExceptions.getArangoDBException(e);
         }
-        logger.debug("Document updated, new rev {}", updateEntity.getRev());
-        document._rev(updateEntity.getRev());
     }
 
     /**

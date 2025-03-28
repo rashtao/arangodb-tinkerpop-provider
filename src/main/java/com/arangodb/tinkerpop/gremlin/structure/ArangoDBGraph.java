@@ -14,8 +14,10 @@ import java.util.stream.Stream;
 
 import com.arangodb.entity.EdgeDefinition;
 import com.arangodb.entity.GraphEntity;
+import com.arangodb.tinkerpop.gremlin.PackageVersion;
 import com.arangodb.tinkerpop.gremlin.persistence.ElementId;
 import com.arangodb.tinkerpop.gremlin.persistence.ElementIdFactory;
+import com.arangodb.tinkerpop.gremlin.persistence.VariablesData;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ConfigurationConverter;
@@ -28,7 +30,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.arangodb.ArangoGraph;
-import com.arangodb.model.GraphCreateOptions;
 import com.arangodb.tinkerpop.gremlin.client.ArangoDBGraphClient;
 import com.arangodb.tinkerpop.gremlin.client.ArangoDBGraphException;
 import com.arangodb.tinkerpop.gremlin.utils.ArangoDBUtil;
@@ -143,9 +144,6 @@ public class ArangoDBGraph implements Graph {
 
         protected static class ArangoDBGraphGraphFeatures implements GraphFeatures {
 
-            protected ArangoDBGraphGraphFeatures() {
-            }
-
             @Override
             public boolean supportsComputer() {
                 return false;
@@ -160,17 +158,9 @@ public class ArangoDBGraph implements Graph {
             public boolean supportsTransactions() {
                 return false;
             }
-
-            @Override
-            public VariableFeatures variables() {
-                return new ArangoDBGraphVariables.ArangoDBGraphVariableFeatures();
-            }
         }
 
         protected static class ArangoDBGraphElementFeatures implements ElementFeatures {
-
-            protected ArangoDBGraphElementFeatures() {
-            }
 
             @Override
             public boolean supportsAnyIds() {
@@ -195,9 +185,6 @@ public class ArangoDBGraph implements Graph {
 
         protected static class ArangoDBGraphVertexFeatures extends ArangoDBGraphElementFeatures implements VertexFeatures {
 
-            protected ArangoDBGraphVertexFeatures() {
-            }
-
             @Override
             public VertexPropertyFeatures properties() {
                 return new ArangoDBGraphVertexPropertyFeatures();
@@ -205,20 +192,9 @@ public class ArangoDBGraph implements Graph {
         }
 
         public static class ArangoDBGraphEdgeFeatures extends ArangoDBGraphElementFeatures implements EdgeFeatures {
-
-            protected ArangoDBGraphEdgeFeatures() {
-            }
-
-            @Override
-            public EdgePropertyFeatures properties() {
-                return new ArangoDBGraphEdgePropertyFeatures();
-            }
         }
 
         protected static class ArangoDBGraphVertexPropertyFeatures implements VertexPropertyFeatures {
-
-            protected ArangoDBGraphVertexPropertyFeatures() {
-            }
 
             @Override
             public boolean supportsAnyIds() {
@@ -239,13 +215,6 @@ public class ArangoDBGraph implements Graph {
             public boolean supportsUuidIds() {
                 return false;
             }
-        }
-
-        protected static class ArangoDBGraphEdgePropertyFeatures implements EdgePropertyFeatures {
-
-            protected ArangoDBGraphEdgePropertyFeatures() {
-            }
-
         }
 
         @Override
@@ -494,12 +463,11 @@ public class ArangoDBGraph implements Graph {
             client.createGraph(name, mergedEdgeDefinitions, orphanCollections);
         }
 
-        // FIXME: review
-        ArangoDBGraphVariables variables = client.getGraphVariables();
-        if (variables == null) {
-            variables = new ArangoDBGraphVariables(name, GRAPH_VARIABLES_COLLECTION, this);
-            client.insertGraphVariables(variables);
-        }
+        VariablesData variablesData = Optional
+                .ofNullable(client.getGraphVariables())
+                .orElseGet(() -> client.insertGraphVariables(new VariablesData(name, PackageVersion.VERSION)));
+        ArangoDBGraphVariables variables = new ArangoDBGraphVariables(this, variablesData);
+        ArangoDBUtil.checkVersion(variables.getVersion());
     }
 
     private List<EdgeDefinition> mergeEdgeDefinitions(List<EdgeDefinition> edgeDefinitions) {
@@ -629,17 +597,6 @@ public class ArangoDBGraph implements Graph {
     }
 
     /**
-     * Returns the identifier of the graph.
-     *
-     * @return the identifier of the graph
-     */
-
-    public String getId() {
-        ArangoGraph graph = client.getArangoGraph();
-        return graph.getInfo().getName();
-    }
-
-    /**
      * The graph name
      *
      * @return the name
@@ -656,13 +613,7 @@ public class ArangoDBGraph implements Graph {
 
     @Override
     public Variables variables() {
-        ArangoDBGraphVariables v = client.getGraphVariables();
-        if (v != null) {
-            v.graph(this);
-            return v;
-        } else {
-            throw new ArangoDBGraphException("Existing graph does not have a Variables collection");
-        }
+        return new ArangoDBGraphVariables(this, client.getGraphVariables());
     }
 
     /**
