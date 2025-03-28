@@ -13,7 +13,6 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import com.arangodb.*;
 import com.arangodb.config.ArangoConfigProperties;
@@ -33,7 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.arangodb.tinkerpop.gremlin.utils.ArangoDBUtil.getArangoDirectionFromGremlinDirection;
-import static java.util.stream.Collectors.groupingBy;
 
 /**
  * The arangodb graph client class handles the HTTP connection to arangodb and performs database
