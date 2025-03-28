@@ -19,10 +19,23 @@ public abstract class TestGraphProvider extends AbstractGraphProvider {
 
     private final String dbName = getClass().getSimpleName();
 
-    protected abstract void configure(ArangoDBConfigurationBuilder builder,
-                                      Class<?> test,
-                                      String testMethodName,
-                                      LoadGraphWith.GraphData loadGraphWith);
+    protected abstract void customizeBuilder(ArangoDBConfigurationBuilder builder);
+
+    protected void configureDataDefinitions(ArangoDBConfigurationBuilder builder,
+                                            Class<?> test,
+                                            String testMethodName,
+                                            LoadGraphWith.GraphData loadGraphWith) {
+    }
+
+    public ArangoDBConfigurationBuilder confBuilder() {
+        ArangoDBConfigurationBuilder builder = new ArangoDBConfigurationBuilder()
+                .arangoHosts("127.0.0.1:8529")
+                .arangoUser("root")
+                .arangoPassword("test")
+                .dataBase(dbName);
+        customizeBuilder(builder);
+        return builder;
+    }
 
     @Override
     public Configuration newGraphConfiguration(final String graphName, final Class<?> test,
@@ -30,13 +43,8 @@ public abstract class TestGraphProvider extends AbstractGraphProvider {
                                                final Map<String, Object> configurationOverrides,
                                                final LoadGraphWith.GraphData loadGraphWith) {
         System.out.println(test.getName() + "#" + testMethodName);
-        ArangoDBConfigurationBuilder builder = new ArangoDBConfigurationBuilder()
-                .arangoHosts("127.0.0.1:8529")
-                .arangoUser("root")
-                .arangoPassword("test")
-                .dataBase(dbName)
-                .graph(graphName);
-        configure(builder, test, testMethodName, loadGraphWith);
+        ArangoDBConfigurationBuilder builder = confBuilder().graph(graphName);
+        configureDataDefinitions(builder, test, testMethodName, loadGraphWith);
         return builder.build();
     }
 

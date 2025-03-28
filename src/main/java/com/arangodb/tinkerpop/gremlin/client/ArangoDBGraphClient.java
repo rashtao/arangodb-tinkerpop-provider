@@ -178,10 +178,17 @@ public class ArangoDBGraphClient {
                     .collection(ArangoDBGraph.GRAPH_VARIABLES_COLLECTION)
                     .getDocument(graph.name(), ArangoDBGraphVariables.class);
         } catch (ArangoDBException e) {
-            logger.error("Failed to retrieve vertex: {}", e.getErrorMessage());
-            throw new ArangoDBGraphException("Failed to retrieve vertex.", e);
+            // collection not found
+            if (e.getErrorNum() == 1203) {
+                return null;
+            }
+            logger.error("Failed to retrieve graph variables: {}", e.getErrorMessage());
+            throw new ArangoDBGraphException("Failed to retrieve graph variables.", e);
         }
-        result.collection(result.label);
+        // FIXME: review
+        if(result != null) {
+            result.collection(result.label);
+        }
         return result;
     }
 
@@ -311,47 +318,25 @@ public class ArangoDBGraphClient {
     /**
      * Create a new graph.
      *
-     * @param name            the name of the new graph
-     * @param edgeDefinitions the edge definitions for the graph
-     * @param options         additional graph options
-     * @return the arango graph
+     * @param name              the name of the new graph
+     * @param edgeDefinitions   the edge definitions for the graph
+     * @param orphanCollections orphan collections
      * @throws ArangoDBGraphException If the graph can not be created
      */
 
-    public ArangoGraph createGraph(String name,
-                                   List<String> vertexCollections,
-                                   List<EdgeDefinition> edgeDefinitions,
-                                   GraphCreateOptions options)
+    public void createGraph(String name,
+                            List<EdgeDefinition> edgeDefinitions,
+                            Set<String> orphanCollections)
             throws ArangoDBGraphException {
         logger.debug("Creating graph {}", name);
-        List<EdgeDefinition> mergedEdgeDefinitions = edgeDefinitions.stream()
-                .collect(groupingBy(EdgeDefinition::getCollection))
-                .entrySet().stream()
-                .map(it -> {
-                    String[] froms = it.getValue().stream().flatMap(x -> x.getFrom().stream()).toArray(String[]::new);
-                    String[] tos = it.getValue().stream().flatMap(x -> x.getTo().stream()).toArray(String[]::new);
-                    return new EdgeDefinition()
-                            .collection(it.getKey())
-                            .from(froms)
-                            .to(tos);
-                })
-                .collect(Collectors.toList());
-
-        Set<String> vColsFromEdges = mergedEdgeDefinitions.stream()
-                .flatMap(it -> Stream.concat(it.getFrom().stream(), it.getTo().stream()))
-                .collect(Collectors.toSet());
-        String[] orphanCollections = vertexCollections.stream()
-                .filter(it -> !vColsFromEdges.contains(it)).toArray(String[]::new);
-        options.orphanCollections(orphanCollections);
-
         try {
             logger.debug("Creating graph in database.");
-            db.createGraph(name, mergedEdgeDefinitions, options);
+            db.createGraph(name, edgeDefinitions, new GraphCreateOptions()
+                    .orphanCollections(orphanCollections.toArray(new String[0])));
         } catch (ArangoDBException e) {
             logger.debug("Error creating graph in database.", e);
             throw ArangoDBExceptions.getArangoDBException(e);
         }
-        return db.graph(name);
     }
 
 

@@ -66,6 +66,9 @@ public class ArangoDBConfigurationBuilder {
 	/** The graph name. */
 	private String graphName = "graph";
 
+	/** The graph class. */
+	private String graphClass = ArangoDBGraph.class.getName();
+
 	/** The user. */
 	private String user = "gremlin";
 
@@ -133,6 +136,7 @@ public class ArangoDBConfigurationBuilder {
 		config.setListDelimiterHandler(new LegacyListDelimiterHandler('/'));
 		config.addProperty(fullPropertyKey(ArangoDBGraph.PROPERTY_KEY_DB_NAME), dbName);
 		config.addProperty(fullPropertyKey(ArangoDBGraph.PROPERTY_KEY_GRAPH_NAME), graphName);
+		config.addProperty(Graph.GRAPH, graphClass);
 		config.addProperty(fullPropertyKey(ArangoDBGraph.PROPERTY_KEY_VERTICES), vertices);
 		config.addProperty(fullPropertyKey(ArangoDBGraph.PROPERTY_KEY_EDGES), edges);
 		List<String> rels = new ArrayList<>();
@@ -195,14 +199,9 @@ public class ArangoDBConfigurationBuilder {
 		if (!hosts.isEmpty()) {
 			config.addProperty(fullPropertyKey(PROPERTY_KEY_HOSTS), String.join(",", hosts));
 		}
-		if (shouldPrefixCollectionNames != null) {
-			config.addProperty(fullPropertyKey(ArangoDBGraph.PROPERTY_KEY_SHOULD_PREFIX_COLLECTION_NAMES), shouldPrefixCollectionNames);
-		}
 		if (simpleGraph != null) {
 			config.addProperty(fullPropertyKey(ArangoDBGraph.SIMPLE_GRAPH), simpleGraph);
 		}
-
-		config.addProperty(Graph.GRAPH, ArangoDBGraph.class.getName());
 		return config;
 	}
 
@@ -231,6 +230,16 @@ public class ArangoDBConfigurationBuilder {
 
 	public ArangoDBConfigurationBuilder graph(String name) {
 		graphName = name;
+		return this;
+	}
+
+	/**
+	 * Specify which graph to instantiate.
+	 * @param graphClass the graph class
+	 * @return a reference to this object.
+	 */
+	public ArangoDBConfigurationBuilder graphClass(Class<? extends ArangoDBGraph> graphClass) {
+		this.graphClass = graphClass.getName();
 		return this;
 	}
 
