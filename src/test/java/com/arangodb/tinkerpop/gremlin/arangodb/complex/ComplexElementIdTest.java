@@ -1,4 +1,4 @@
-package com.arangodb.tinkerpop.gremlin.arangodb;
+package com.arangodb.tinkerpop.gremlin.arangodb.complex;
 
 import com.arangodb.tinkerpop.gremlin.structure.ArangoDBGraph;
 import org.apache.tinkerpop.gremlin.AbstractGremlinTest;
@@ -11,14 +11,14 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.Assume.assumeTrue;
 
 @SuppressWarnings("resource")
-public class ElementIdTest extends AbstractGremlinTest {
+public class ComplexElementIdTest extends AbstractGremlinTest {
 
     protected ArangoDBGraph graph() {
         return (ArangoDBGraph) graph;
     }
 
     @Test
-    public void complexGraphId() {
+    public void id() {
         assumeTrue(!graph().isSimpleGraph());
 
         assertThat(graph.addVertex(T.id, "foo/a").id()).isEqualTo("foo/a");
@@ -60,28 +60,7 @@ public class ElementIdTest extends AbstractGremlinTest {
     }
 
     @Test
-    public void simpleGraphId() {
-        assumeTrue(graph().isSimpleGraph());
-
-        assertThat(graph.addVertex(T.id, "a").id()).isEqualTo("a");
-        assertThat(graph.addVertex(T.id, "b", T.label, "bar").id()).isEqualTo("b");
-        assertThat(graph.addVertex().id())
-                .isInstanceOf(String.class)
-                .asString()
-                .doesNotContain("/");
-
-        assertThat(catchThrowable(() -> graph.addVertex(T.id, "foo/bar")))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("foo/bar")
-                .hasMessageContaining("invalid character '/'");
-        assertThat(catchThrowable(() -> graph.addVertex(T.id, "foo_bar")))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("foo_bar")
-                .hasMessageContaining("invalid character '_'");
-    }
-
-    @Test
-    public void complexGraphLabel() {
+    public void label() {
         assumeTrue(!graph().isSimpleGraph());
 
         assertThat(graph.addVertex(T.id, "foo/a").label()).isEqualTo("foo");
@@ -101,13 +80,4 @@ public class ElementIdTest extends AbstractGremlinTest {
                 .hasMessageContaining("invalid character '_'");
     }
 
-    @Test
-    public void simpleGraphLabel() {
-        assumeTrue(graph().isSimpleGraph());
-
-        assertThat(graph.addVertex(T.label, "foo").label()).isEqualTo("foo");
-        assertThat(graph.addVertex(T.id, "a", T.label, "bar").label()).isEqualTo("bar");
-        assertThat(graph.addVertex(T.id, "b").label()).isEqualTo(Vertex.DEFAULT_LABEL);
-        assertThat(graph.addVertex().label()).isEqualTo(Vertex.DEFAULT_LABEL);
-    }
 }

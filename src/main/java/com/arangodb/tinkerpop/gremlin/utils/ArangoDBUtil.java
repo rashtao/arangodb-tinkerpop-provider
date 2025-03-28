@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.Equator;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -101,35 +102,6 @@ public class ArangoDBUtil {
 
 
     /**
-     * Creates the default edge definitions. When no relations are provided, the graph schema is
-     * assumed to be fully connected, i.e. there is an EdgeDefintion for each possible combination
-     * of Vertex-Edge-Vertex triplets.
-     *
-     * @param verticesCollectionNames the vertex collection names
-     * @param edgesCollectionNames    the edge collection names
-     * @return the list of edge definitions
-     */
-
-    public static List<EdgeDefinition> createDefaultEdgeDefinitions(
-            List<String> verticesCollectionNames,
-            List<String> edgesCollectionNames) {
-        List<EdgeDefinition> result = new ArrayList<>();
-        for (String e : edgesCollectionNames) {
-            for (String from : verticesCollectionNames) {
-                for (String to : verticesCollectionNames) {
-                    EdgeDefinition ed = new EdgeDefinition()
-                            .collection(e)
-                            .from(from)
-                            .to(to);
-                    result.add(ed);
-                }
-            }
-        }
-        return result;
-    }
-
-
-    /**
      * Gets a collection that is unique for the given graph.
      *
      * @param graphName                 the graph name
@@ -146,84 +118,42 @@ public class ArangoDBUtil {
         }
     }
 
-    /**
-     * Validate if an existing graph is correctly configured to handle the desired vertex, edges
-     * and relations.
-     *
-     * @param verticesCollectionNames The names of collections for nodes
-     * @param edgesCollectionNames    The names of collections for edges
-     * @param requiredDefinitions     The description of edge definitions
-     * @param graph                   the graph
-     * @param options                 The options used to create the graph
-     * @throws ArangoDBGraphException If the graph settings do not match the configuration information
-     */
-
-    public static void checkGraphForErrors(
-            List<String> verticesCollectionNames,
-            List<String> edgesCollectionNames,
-            List<EdgeDefinition> requiredDefinitions,
-            ArangoGraph graph,
-            GraphCreateOptions options) throws ArangoDBGraphException {
-
-        checkGraphVertexCollections(verticesCollectionNames, graph, options);
-
-        GraphEntity ge = graph.getInfo();
-        Collection<EdgeDefinition> graphEdgeDefinitions = ge.getEdgeDefinitions();
-        if (CollectionUtils.isEmpty(requiredDefinitions)) {
-            // If no relations are defined, vertices and edges can only have one value
-            if ((verticesCollectionNames.size() != 1) || (edgesCollectionNames.size() != 1)) {
-                throw new ArangoDBGraphException("No relations where specified but more than one vertex/edge where defined.");
-            }
-            if (graphEdgeDefinitions.size() != 2) {        // There is always a edgeDefinition for ELEMENT_HAS_PROPERTIES
-                throw new ArangoDBGraphException("No relations where specified but the graph has more than one EdgeDefinition.");
-            }
-        }
-        Map<String, EdgeDefinition> eds = requiredDefinitions.stream().collect(Collectors.toMap(EdgeDefinition::getCollection, ed -> ed));
-
-        for (EdgeDefinition existing : graphEdgeDefinitions) {
-            if (eds.containsKey(existing.getCollection())) {
-                EdgeDefinition requiredEdgeDefinition = eds.remove(existing.getCollection());
-                HashSet<String> existingSet = new HashSet<>(existing.getFrom());
-                HashSet<String> requiredSet = new HashSet<>(requiredEdgeDefinition.getFrom());
-                if (!existingSet.equals(requiredSet)) {
-                    throw new ArangoDBGraphException(String.format("The from collections dont match for edge definition %s", existing.getCollection()));
-                }
-                existingSet.clear();
-                existingSet.addAll(existing.getTo());
-                requiredSet.clear();
-                requiredSet.addAll(requiredEdgeDefinition.getTo());
-                if (!existingSet.equals(requiredSet)) {
-                    throw new ArangoDBGraphException(String.format("The to collections dont match for edge definition %s", existing.getCollection()));
-                }
-            } else {
-                throw new ArangoDBGraphException(String.format("The graph has a surplus edge definition %s", edgeDefinitionString(existing)));
-            }
-        }
+    public static boolean equal(Collection<EdgeDefinition> a, Collection<EdgeDefinition> b) {
+        return CollectionUtils.isEqualCollection(a, b, new EdgeDefinitionEquator());
 
     }
 
-    private static void checkGraphVertexCollections(List<String> verticesCollectionNames, ArangoGraph graph, GraphCreateOptions options) {
-        List<String> allVertexCollections = new ArrayList<>(verticesCollectionNames);
-        final Collection<String> orphanCollections = options.getOrphanCollections();
-        if (orphanCollections != null) {
-            allVertexCollections.addAll(orphanCollections);
+    private static class EdgeDefinitionEquator implements Equator<EdgeDefinition> {
+        @Override
+        public boolean equate(EdgeDefinition a, EdgeDefinition b) {
+            return a.getCollection().equals(b.getCollection()) &&
+                    CollectionUtils.isEqualCollection(a.getFrom(), b.getFrom()) &&
+                    CollectionUtils.isEqualCollection(a.getTo(), b.getTo());
         }
-        if (!graph.getVertexCollections().containsAll(allVertexCollections)) {
-            Set<String> avc = new HashSet<>(allVertexCollections);
-            avc.removeAll(graph.getVertexCollections());
-            throw new ArangoDBGraphException("Not all declared vertex names appear in the graph. Missing " + avc);
+
+        @Override
+        public int hash(EdgeDefinition o) {
+            return Objects.hash(o.getCollection(), new HashSet<>(o.getFrom()),new HashSet<>(o.getTo()));
         }
     }
 
-    /**
-     * Get a string representation of the Edge definition that complies with the configuration options.
-     *
-     * @param ed the Edge definition
-     * @return the string that represents the edge definition
-     */
+    public static String toString(Collection<EdgeDefinition> edgeDefinitions) {
+        return "[" +
+                edgeDefinitions.stream()
+                        .map(ArangoDBUtil::toString)
+                        .collect(Collectors.joining(",")) +
+                "]";
+    }
 
-    public static String edgeDefinitionString(EdgeDefinition ed) {
-        return String.format("[%s]: %s->%s", ed.getCollection(), ed.getFrom(), ed.getTo());
+
+    public static String toString(EdgeDefinition edgeDefinition) {
+        return "{" +
+                "from:" +
+                String.join(",", edgeDefinition.getFrom()) +
+                "," +
+                "to:" +
+                String.join(",", edgeDefinition.getTo()) +
+                "}";
     }
 
     /**
