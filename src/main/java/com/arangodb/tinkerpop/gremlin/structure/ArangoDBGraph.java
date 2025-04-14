@@ -468,6 +468,7 @@ public class ArangoDBGraph implements Graph {
                 .orElseGet(() -> client.insertGraphVariables(new VariablesData(name, PackageVersion.VERSION)));
         ArangoDBGraphVariables variables = new ArangoDBGraphVariables(this, variablesData);
         ArangoDBUtil.checkVersion(variables.getVersion());
+        variables.updateVersion(PackageVersion.VERSION);
     }
 
     private List<EdgeDefinition> mergeEdgeDefinitions(List<EdgeDefinition> edgeDefinitions) {

@@ -161,7 +161,6 @@ public class ArangoDBUtil {
             throw new IllegalStateException("Existing graph has more recent version [" + version +
                     "] than library version [" + PackageVersion.VERSION + "].");
         }
-
     }
 
     private static class VersionComparator implements Comparator<String> {

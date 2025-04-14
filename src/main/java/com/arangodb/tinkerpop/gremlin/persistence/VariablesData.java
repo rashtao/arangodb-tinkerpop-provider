@@ -9,7 +9,7 @@ import java.util.Objects;
 public class VariablesData extends SimplePropertyData {
 
     private final String key;
-    private final String version;
+    private String version;
 
     @JsonCreator
     public VariablesData(@Key String key, @JsonProperty("version") String version) {
@@ -24,6 +24,10 @@ public class VariablesData extends SimplePropertyData {
 
     public String getVersion() {
         return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
     }
 
     @Override

@@ -35,6 +35,11 @@ public class ArangoDBGraphVariables implements Graph.Variables {
         return data.getVersion();
     }
 
+    public void updateVersion(String version) {
+        data.setVersion(version);
+        update();
+    }
+
     @Override
     public Set<String> keys() {
         return data.entries()

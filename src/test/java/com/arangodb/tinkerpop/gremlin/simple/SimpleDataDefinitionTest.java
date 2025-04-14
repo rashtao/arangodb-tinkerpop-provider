@@ -59,7 +59,7 @@ public class SimpleDataDefinitionTest extends DataDefinitionTest {
                 .withEdgeCollection("edges")
                 .configureEdge("edges", "vertexes", "vertexes")
                 .build();
-        GraphEntity graphInfo = createGraph(conf);
+        GraphEntity graphInfo = graphInfo(conf);
         assertThat(graphInfo).isNotNull();
         assertThat(graphInfo.getOrphanCollections()).isEmpty();
         assertThat(graphInfo.getEdgeDefinitions())
@@ -119,8 +119,8 @@ public class SimpleDataDefinitionTest extends DataDefinitionTest {
                 .withEdgeCollection("e")
                 .configureEdge("e", "v", "v")
                 .build();
-        createGraph(conf);
-        GraphEntity graphInfo = createGraph(conf);
+        graphInfo(conf);
+        GraphEntity graphInfo = graphInfo(conf);
         assertThat(graphInfo).isNotNull();
         assertThat(graphInfo.getOrphanCollections()).isEmpty();
         assertThat(graphInfo.getEdgeDefinitions())
@@ -139,7 +139,7 @@ public class SimpleDataDefinitionTest extends DataDefinitionTest {
     @Test
     public void existingSimpleGraphWithMoreOrphanCollections() {
         String name = "existingSimpleGraph";
-        createGraph(confBuilder()
+        graphInfo(confBuilder()
                 .simpleGraph(false)
                 .graph(name)
                 .withVertexCollection("a")
@@ -153,7 +153,7 @@ public class SimpleDataDefinitionTest extends DataDefinitionTest {
                 .withEdgeCollection("e")
                 .configureEdge("e", "v", "v")
                 .build();
-        Throwable thrown = catchThrowable(() -> createGraph(conf));
+        Throwable thrown = catchThrowable(() -> graphInfo(conf));
         assertThat(thrown)
                 .isInstanceOf(RuntimeException.class)
                 .cause()
@@ -166,7 +166,7 @@ public class SimpleDataDefinitionTest extends DataDefinitionTest {
     @Test
     public void existingSimpleGraphWithLessOrphanCollections() {
         String name = "existingSimpleGraph";
-        createGraph(confBuilder()
+        graphInfo(confBuilder()
                 .simpleGraph(false)
                 .graph(name)
                 .build());
@@ -176,7 +176,7 @@ public class SimpleDataDefinitionTest extends DataDefinitionTest {
                 .withEdgeCollection("e")
                 .configureEdge("e", "v", "v")
                 .build();
-        Throwable thrown = catchThrowable(() -> createGraph(conf));
+        Throwable thrown = catchThrowable(() -> graphInfo(conf));
         assertThat(thrown)
                 .isInstanceOf(RuntimeException.class)
                 .cause()
@@ -189,7 +189,7 @@ public class SimpleDataDefinitionTest extends DataDefinitionTest {
     @Test
     public void existingSimpleGraphWithMoreEdgeDefinitions() {
         String name = "existingSimpleGraph";
-        createGraph(confBuilder()
+        graphInfo(confBuilder()
                 .simpleGraph(false)
                 .graph(name)
                 .withVertexCollection("a")
@@ -204,7 +204,7 @@ public class SimpleDataDefinitionTest extends DataDefinitionTest {
                 .withEdgeCollection("x")
                 .configureEdge("x", "a", "a")
                 .build();
-        Throwable thrown = catchThrowable(() -> createGraph(conf));
+        Throwable thrown = catchThrowable(() -> graphInfo(conf));
         assertThat(thrown)
                 .isInstanceOf(RuntimeException.class)
                 .cause()
@@ -217,7 +217,7 @@ public class SimpleDataDefinitionTest extends DataDefinitionTest {
     @Test
     public void existingSimpleGraphWithLessEdgeDefinitions() {
         String name = "existingSimpleGraph";
-        createGraph(confBuilder()
+        graphInfo(confBuilder()
                 .simpleGraph(false)
                 .graph(name)
                 .withVertexCollection("a")
@@ -228,7 +228,7 @@ public class SimpleDataDefinitionTest extends DataDefinitionTest {
                 .withEdgeCollection("x")
                 .configureEdge("x", "a", "a")
                 .build();
-        Throwable thrown = catchThrowable(() -> createGraph(conf));
+        Throwable thrown = catchThrowable(() -> graphInfo(conf));
         assertThat(thrown)
                 .isInstanceOf(RuntimeException.class)
                 .cause()
@@ -240,7 +240,7 @@ public class SimpleDataDefinitionTest extends DataDefinitionTest {
 
     private void checkDefaultSimpleGraph(Configuration conf) {
         String name = getName(conf);
-        GraphEntity graphInfo = createGraph(conf);
+        GraphEntity graphInfo = graphInfo(conf);
         assertThat(graphInfo).isNotNull();
         assertThat(graphInfo.getOrphanCollections()).isEmpty();
         assertThat(graphInfo.getEdgeDefinitions())
