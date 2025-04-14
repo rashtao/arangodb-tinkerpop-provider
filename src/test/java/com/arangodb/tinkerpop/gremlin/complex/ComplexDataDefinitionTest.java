@@ -21,7 +21,7 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
     @Test
     public void complexEmptyGraph() {
         Configuration conf = confBuilder().build();
-        GraphEntity graphInfo = createGraph(conf);
+        GraphEntity graphInfo = graphInfo(conf);
         assertThat(graphInfo).isNotNull();
         assertThat(graphInfo.getOrphanCollections()).isEmpty();
         assertThat(graphInfo.getEdgeDefinitions()).isEmpty();
@@ -33,7 +33,7 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
                 .graph("foo")
                 .withVertexCollection("v")
                 .build();
-        GraphEntity graphInfo = createGraph(conf);
+        GraphEntity graphInfo = graphInfo(conf);
         assertThat(graphInfo).isNotNull();
         assertThat(graphInfo.getOrphanCollections())
                 .hasSize(1)
@@ -50,7 +50,7 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
                 .withEdgeCollection("e")
                 .configureEdge("e", "v", "v")
                 .build();
-        GraphEntity graphInfo = createGraph(conf);
+        GraphEntity graphInfo = graphInfo(conf);
         assertThat(graphInfo).isNotNull();
         assertThat(graphInfo.getOrphanCollections()).isEmpty();
         assertThat(graphInfo.getEdgeDefinitions())
@@ -76,7 +76,7 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
                 .withEdgeCollection("e")
                 .configureEdge("e", "v", "v")
                 .build();
-        GraphEntity graphInfo = createGraph(conf);
+        GraphEntity graphInfo = graphInfo(conf);
         assertThat(graphInfo).isNotNull();
         assertThat(graphInfo.getOrphanCollections())
                 .hasSize(1)
@@ -104,7 +104,7 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
                 .withEdgeCollection("e")
                 .configureEdge("e", CollectionUtil.asSet("v", "a"), CollectionUtil.asSet("a", "v"))
                 .build();
-        GraphEntity graphInfo = createGraph(conf);
+        GraphEntity graphInfo = graphInfo(conf);
         assertThat(graphInfo).isNotNull();
         assertThat(graphInfo.getOrphanCollections()).isEmpty();
         assertThat(graphInfo.getEdgeDefinitions())
@@ -133,7 +133,7 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
                 .configureEdge("e", "v", "v")
                 .configureEdge("e", "a", "a")
                 .build();
-        GraphEntity graphInfo = createGraph(conf);
+        GraphEntity graphInfo = graphInfo(conf);
         assertThat(graphInfo).isNotNull();
         assertThat(graphInfo.getOrphanCollections()).isEmpty();
         assertThat(graphInfo.getEdgeDefinitions())
@@ -154,7 +154,7 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
     @Test
     public void existingComplexGraphWithManyEdgesCollectionsWithSameNameInDifferentOrder() {
         String name = "complexGraph";
-        createGraph(confBuilder()
+        graphInfo(confBuilder()
                 .graph(name)
                 .withVertexCollection("a")
                 .withVertexCollection("v")
@@ -170,7 +170,7 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
                 .configureEdge("e", "v", "v")
                 .configureEdge("e", "a", "a")
                 .build();
-        GraphEntity graphInfo = createGraph(conf);
+        GraphEntity graphInfo = graphInfo(conf);
         assertThat(graphInfo).isNotNull();
         assertThat(graphInfo.getOrphanCollections()).isEmpty();
         assertThat(graphInfo.getEdgeDefinitions())
@@ -196,7 +196,7 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
                 .withEdgeCollection("edge")
                 .configureEdge("edge", "vertex", "vertex")
                 .build();
-        Throwable thrown = catchThrowable(() -> createGraph(conf));
+        Throwable thrown = catchThrowable(() -> graphInfo(conf));
         assertThat(thrown)
                 .isInstanceOf(RuntimeException.class)
                 .cause()
@@ -214,7 +214,7 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
                 .withEdgeCollection("edge")
                 .configureEdge("edge", "foo_vertex", "foo_vertex")
                 .build();
-        Throwable thrown = catchThrowable(() -> createGraph(conf));
+        Throwable thrown = catchThrowable(() -> graphInfo(conf));
         assertThat(thrown)
                 .isInstanceOf(RuntimeException.class)
                 .cause()
@@ -232,7 +232,7 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
                 .withEdgeCollection("foo_edge")
                 .configureEdge("foo_edge", "vertex", "vertex")
                 .build();
-        Throwable thrown = catchThrowable(() -> createGraph(conf));
+        Throwable thrown = catchThrowable(() -> graphInfo(conf));
         assertThat(thrown)
                 .isInstanceOf(RuntimeException.class)
                 .cause()
@@ -249,7 +249,7 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
                 .withVertexCollection("vertex")
                 .withEdgeCollection("edge")
                 .build();
-        Throwable thrown = catchThrowable(() -> createGraph(conf));
+        Throwable thrown = catchThrowable(() -> graphInfo(conf));
         assertThat(thrown)
                 .isInstanceOf(RuntimeException.class)
                 .cause()
@@ -267,7 +267,7 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
                 .withEdgeCollection("edge")
                 .configureEdge("edges", "vertexes", "vertexes")
                 .build();
-        Throwable thrown = catchThrowable(() -> createGraph(conf));
+        Throwable thrown = catchThrowable(() -> graphInfo(conf));
         assertThat(thrown)
                 .isInstanceOf(RuntimeException.class)
                 .cause()
@@ -286,8 +286,8 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
                 .withEdgeCollection("e")
                 .configureEdge("e", "v", "v")
                 .build();
-        createGraph(conf);
-        GraphEntity graphInfo = createGraph(conf);
+        graphInfo(conf);
+        GraphEntity graphInfo = graphInfo(conf);
         assertThat(graphInfo).isNotNull();
         assertThat(graphInfo.getOrphanCollections()).isEmpty();
         assertThat(graphInfo.getEdgeDefinitions())
@@ -306,7 +306,7 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
     @Test
     public void existingComplexGraphWithMoreOrphanCollections() {
         String name = "existingComplexGraph";
-        createGraph(confBuilder()
+        graphInfo(confBuilder()
                 .graph(name)
                 .withVertexCollection("a")
                 .withVertexCollection("v")
@@ -319,7 +319,7 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
                 .withEdgeCollection("e")
                 .configureEdge("e", "v", "v")
                 .build();
-        Throwable thrown = catchThrowable(() -> createGraph(conf));
+        Throwable thrown = catchThrowable(() -> graphInfo(conf));
         assertThat(thrown)
                 .isInstanceOf(RuntimeException.class)
                 .cause()
@@ -332,7 +332,7 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
     @Test
     public void existingComplexGraphWithLessOrphanCollections() {
         String name = "existingComplexGraph";
-        createGraph(confBuilder()
+        graphInfo(confBuilder()
                 .graph(name)
                 .withVertexCollection("v")
                 .withEdgeCollection("e")
@@ -345,7 +345,7 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
                 .withEdgeCollection("e")
                 .configureEdge("e", "v", "v")
                 .build();
-        Throwable thrown = catchThrowable(() -> createGraph(conf));
+        Throwable thrown = catchThrowable(() -> graphInfo(conf));
         assertThat(thrown)
                 .isInstanceOf(RuntimeException.class)
                 .cause()
@@ -358,7 +358,7 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
     @Test
     public void existingComplexGraphWithMoreEdgeDefinitions() {
         String name = "existingComplexGraph";
-        createGraph(confBuilder()
+        graphInfo(confBuilder()
                 .graph(name)
                 .withVertexCollection("a")
                 .withVertexCollection("b")
@@ -374,7 +374,7 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
                 .withEdgeCollection("x")
                 .configureEdge("x", "a", "b")
                 .build();
-        Throwable thrown = catchThrowable(() -> createGraph(conf));
+        Throwable thrown = catchThrowable(() -> graphInfo(conf));
         assertThat(thrown)
                 .isInstanceOf(RuntimeException.class)
                 .cause()
@@ -387,7 +387,7 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
     @Test
     public void existingComplexGraphWithLessEdgeDefinitions() {
         String name = "existingComplexGraph";
-        createGraph(confBuilder()
+        graphInfo(confBuilder()
                 .graph(name)
                 .withVertexCollection("a")
                 .withVertexCollection("b")
@@ -403,7 +403,7 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
                 .configureEdge("x", "a", "b")
                 .configureEdge("y", "b", "a")
                 .build();
-        Throwable thrown = catchThrowable(() -> createGraph(conf));
+        Throwable thrown = catchThrowable(() -> graphInfo(conf));
         assertThat(thrown)
                 .isInstanceOf(RuntimeException.class)
                 .cause()
@@ -416,7 +416,7 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
     @Test
     public void existingComplexGraphWithMismatchingEdgeDefinitions() {
         String name = "existingComplexGraph";
-        createGraph(confBuilder()
+        graphInfo(confBuilder()
                 .graph(name)
                 .withVertexCollection("a")
                 .withVertexCollection("b")
@@ -430,7 +430,7 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
                 .withEdgeCollection("x")
                 .configureEdge("x", "b", "a")
                 .build();
-        Throwable thrown = catchThrowable(() -> createGraph(conf));
+        Throwable thrown = catchThrowable(() -> graphInfo(conf));
         assertThat(thrown)
                 .isInstanceOf(RuntimeException.class)
                 .cause()
