@@ -2,9 +2,9 @@ package com.arangodb.tinkerpop.gremlin;
 
 import com.arangodb.entity.GraphEntity;
 import com.arangodb.tinkerpop.gremlin.structure.ArangoDBGraph;
+import com.arangodb.tinkerpop.gremlin.structure.ArangoDBGraphConfig;
 import com.arangodb.tinkerpop.gremlin.utils.ArangoDBConfigurationBuilder;
 import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ConfigurationConverter;
 import org.apache.tinkerpop.gremlin.structure.util.GraphFactory;
 import org.junit.After;
 import org.junit.Before;
@@ -15,11 +15,11 @@ import java.util.concurrent.ConcurrentHashMap;
 public abstract class AbstractTest {
     protected TestGraphClient client;
     private final Set<ArangoDBGraph> graphs = ConcurrentHashMap.newKeySet();
-    private final String dbName = getClass().getSimpleName();
+    protected final String dbName = getClass().getSimpleName();
 
     @Before
     public void initDB() {
-        client = new TestGraphClient(ConfigurationConverter.getProperties(confBuilder().build().subset(ArangoDBGraph.PROPERTY_KEY_PREFIX)), dbName);
+        client = new TestGraphClient(confBuilder().build());
     }
 
     @After
@@ -32,10 +32,10 @@ public abstract class AbstractTest {
 
     protected ArangoDBConfigurationBuilder confBuilder() {
         return new ArangoDBConfigurationBuilder()
-                .arangoHosts("127.0.0.1:8529")
-                .arangoUser("root")
-                .arangoPassword("test")
-                .dataBase(dbName);
+                .hosts("127.0.0.1:8529")
+                .user("root")
+                .password("test")
+                .database(dbName);
     }
 
     @SuppressWarnings("resource")
@@ -49,8 +49,14 @@ public abstract class AbstractTest {
         return g;
     }
 
+    protected ArangoDBGraph createGraph(String configurationFile) {
+        ArangoDBGraph g = (ArangoDBGraph) GraphFactory.open(configurationFile);
+        graphs.add(g);
+        return g;
+    }
+
     protected String getName(Configuration conf) {
-        return conf.subset(ArangoDBGraph.PROPERTY_KEY_PREFIX).getString(ArangoDBGraph.PROPERTY_KEY_GRAPH_NAME);
+        return new ArangoDBGraphConfig(conf).graphName;
     }
 
 }

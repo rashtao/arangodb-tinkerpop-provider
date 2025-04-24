@@ -10,6 +10,7 @@ package com.arangodb.tinkerpop.gremlin.client;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.arangodb.tinkerpop.gremlin.persistence.ElementId;
 import org.slf4j.Logger;
@@ -85,7 +86,7 @@ public class ArangoDBQueryBuilder {
 	 * @return a reference to this object.
 	 */
 	
-	public ArangoDBQueryBuilder with(List<String> collections, Map<String, Object> bindVars) {
+	public ArangoDBQueryBuilder with(Set<String> collections, Map<String, Object> bindVars) {
 		queryBuilder.append("WITH ");
 		String separator = "";
 		int colId = 1;
@@ -103,7 +104,7 @@ public class ArangoDBQueryBuilder {
 	/**
 	 * Append a Document and FILTER statements to the query builder. Use this to find a single or
 	 * group of elements in the graph. This segment should be used in conjunction with the 
-	 * {@link #with(List, Map)} segment.
+	 * {@link #with(Set, Map)} segment.
 	 *
 	 * @param ids 					the id(s) to look for
 	 * @param loopVariable 			the loop variable name
@@ -133,7 +134,7 @@ public class ArangoDBQueryBuilder {
 	 */
 	
 	public ArangoDBQueryBuilder union(
-		List<String> collections,
+		Set<String> collections,
 		String loopVariable,
 		Map<String, Object> bindVars) {
 		int count = 1;

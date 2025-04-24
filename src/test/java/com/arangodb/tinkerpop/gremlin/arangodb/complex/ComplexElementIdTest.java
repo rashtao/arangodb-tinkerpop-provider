@@ -1,6 +1,7 @@
 package com.arangodb.tinkerpop.gremlin.arangodb.complex;
 
 import com.arangodb.tinkerpop.gremlin.structure.ArangoDBGraph;
+import com.arangodb.tinkerpop.gremlin.structure.ArangoDBGraphConfig;
 import org.apache.tinkerpop.gremlin.AbstractGremlinTest;
 import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
@@ -8,7 +9,7 @@ import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
-import static org.junit.Assume.assumeTrue;
+import static org.assertj.core.api.Assumptions.assumeThat;
 
 @SuppressWarnings("resource")
 public class ComplexElementIdTest extends AbstractGremlinTest {
@@ -19,7 +20,7 @@ public class ComplexElementIdTest extends AbstractGremlinTest {
 
     @Test
     public void id() {
-        assumeTrue(!graph().isSimpleGraph());
+        assumeThat(graph().type()).isEqualTo(ArangoDBGraphConfig.GraphType.COMPLEX);
 
         assertThat(graph.addVertex(T.id, "foo/a").id()).isEqualTo("foo/a");
         assertThat(graph.addVertex(T.id, "foo/b", T.label, "foo").id()).isEqualTo("foo/b");
@@ -61,7 +62,7 @@ public class ComplexElementIdTest extends AbstractGremlinTest {
 
     @Test
     public void label() {
-        assumeTrue(!graph().isSimpleGraph());
+        assumeThat(graph().type()).isEqualTo(ArangoDBGraphConfig.GraphType.COMPLEX);
 
         assertThat(graph.addVertex(T.id, "foo/a").label()).isEqualTo("foo");
         assertThat(graph.addVertex(T.id, "foo/b", T.label, "foo").label()).isEqualTo("foo");

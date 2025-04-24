@@ -2,6 +2,8 @@ package com.arangodb.tinkerpop.gremlin.simple;
 
 import com.arangodb.entity.GraphEntity;
 import com.arangodb.tinkerpop.gremlin.DataDefinitionTest;
+import com.arangodb.tinkerpop.gremlin.structure.ArangoDBGraphConfig;
+import com.arangodb.tinkerpop.gremlin.structure.ArangoDBGraphConfig.EdgeDef;
 import org.apache.commons.configuration2.Configuration;
 import org.junit.Test;
 
@@ -13,8 +15,8 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 public class SimpleDataDefinitionTest extends DataDefinitionTest {
 
     @Override
-    protected boolean isSimple() {
-        return true;
+    protected ArangoDBGraphConfig.GraphType graphType() {
+        return ArangoDBGraphConfig.GraphType.SIMPLE;
     }
 
     @Test
@@ -26,38 +28,16 @@ public class SimpleDataDefinitionTest extends DataDefinitionTest {
     @Test
     public void simpleGraph() {
         Configuration conf = confBuilder()
-                .withVertexCollection("vertex")
-                .withEdgeCollection("edge")
-                .configureEdge("edge", "vertex", "vertex")
+                .edgeDefinitions(EdgeDef.of("edge").from("vertex").to("vertex"))
                 .build();
         checkDefaultSimpleGraph(conf);
-    }
-
-    @Test
-    public void simpleGraphWithPrefixedCollections() {
-        Configuration conf = confBuilder()
-                .graph("foo")
-                .withVertexCollection("foo_vertex")
-                .withEdgeCollection("foo_edge")
-                .configureEdge("foo_edge", "foo_vertex", "foo_vertex")
-                .build();
-        Throwable thrown = catchThrowable(() -> checkDefaultSimpleGraph(conf));
-        assertThat(thrown)
-                .isInstanceOf(RuntimeException.class)
-                .cause()
-                .isInstanceOf(InvocationTargetException.class);
-        assertThat(((InvocationTargetException) thrown.getCause()).getTargetException())
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("name cannot contain '_'");
     }
 
     @Test
     public void simpleGraphWithNonDefaultCollections() {
         Configuration conf = confBuilder()
                 .graph("foo")
-                .withVertexCollection("vertexes")
-                .withEdgeCollection("edges")
-                .configureEdge("edges", "vertexes", "vertexes")
+                .edgeDefinitions(EdgeDef.of("edges").from("vertexes").to("vertexes"))
                 .build();
         GraphEntity graphInfo = graphInfo(conf);
         assertThat(graphInfo).isNotNull();
@@ -76,38 +56,35 @@ public class SimpleDataDefinitionTest extends DataDefinitionTest {
     }
 
     @Test
-    public void simpleGraphWithoutEdgeDefinition() {
+    public void simpleGraphWithInvalidVertexName() {
         Configuration conf = confBuilder()
                 .graph("foo")
-                .withVertexCollection("vertex")
-                .withEdgeCollection("edge")
+                .edgeDefinitions(EdgeDef.of("edge").from("foo_ver_tex").to("foo_vertex"))
                 .build();
-        Throwable thrown = catchThrowable(() -> checkDefaultSimpleGraph(conf));
+        Throwable thrown = catchThrowable(() -> graphInfo(conf));
         assertThat(thrown)
                 .isInstanceOf(RuntimeException.class)
                 .cause()
                 .isInstanceOf(InvocationTargetException.class);
         assertThat(((InvocationTargetException) thrown.getCause()).getTargetException())
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Missing definition for edge");
+                .hasMessageContaining("name cannot contain '_'");
     }
 
     @Test
-    public void simpleGraphWithWrongEdgeDefinition() {
+    public void simpleGraphWithInvalidEdgeName() {
         Configuration conf = confBuilder()
                 .graph("foo")
-                .withVertexCollection("vertex")
-                .withEdgeCollection("edge")
-                .configureEdge("edges", "vertexes", "vertexes")
+                .edgeDefinitions(EdgeDef.of("foo_ed_ge").from("vertex").to("vertex"))
                 .build();
-        Throwable thrown = catchThrowable(() -> checkDefaultSimpleGraph(conf));
+        Throwable thrown = catchThrowable(() -> graphInfo(conf));
         assertThat(thrown)
                 .isInstanceOf(RuntimeException.class)
                 .cause()
                 .isInstanceOf(InvocationTargetException.class);
         assertThat(((InvocationTargetException) thrown.getCause()).getTargetException())
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Missing definition for edge");
+                .hasMessageContaining("name cannot contain '_'");
     }
 
     @Test
@@ -115,9 +92,7 @@ public class SimpleDataDefinitionTest extends DataDefinitionTest {
         String name = "existingSimpleGraph";
         Configuration conf = confBuilder()
                 .graph(name)
-                .withVertexCollection("v")
-                .withEdgeCollection("e")
-                .configureEdge("e", "v", "v")
+                .edgeDefinitions(EdgeDef.of("e").from("v").to("v"))
                 .build();
         graphInfo(conf);
         GraphEntity graphInfo = graphInfo(conf);
@@ -137,21 +112,17 @@ public class SimpleDataDefinitionTest extends DataDefinitionTest {
     }
 
     @Test
-    public void existingSimpleGraphWithMoreOrphanCollections() {
+    public void existingGraphWithMoreOrphanCollections() {
         String name = "existingSimpleGraph";
         graphInfo(confBuilder()
-                .simpleGraph(false)
+                .graphType(ArangoDBGraphConfig.GraphType.COMPLEX)
                 .graph(name)
-                .withVertexCollection("a")
-                .withVertexCollection("v")
-                .withEdgeCollection("e")
-                .configureEdge("e", "v", "v")
+                .orphanCollections("a")
+                .edgeDefinitions(EdgeDef.of("e").from("v").to("v"))
                 .build());
         Configuration conf = confBuilder()
                 .graph(name)
-                .withVertexCollection("v")
-                .withEdgeCollection("e")
-                .configureEdge("e", "v", "v")
+                .edgeDefinitions(EdgeDef.of("e").from("v").to("v"))
                 .build();
         Throwable thrown = catchThrowable(() -> graphInfo(conf));
         assertThat(thrown)
@@ -164,17 +135,15 @@ public class SimpleDataDefinitionTest extends DataDefinitionTest {
     }
 
     @Test
-    public void existingSimpleGraphWithLessOrphanCollections() {
+    public void existingGraphWithLessOrphanCollections() {
         String name = "existingSimpleGraph";
         graphInfo(confBuilder()
-                .simpleGraph(false)
+                .graphType(ArangoDBGraphConfig.GraphType.COMPLEX)
                 .graph(name)
                 .build());
         Configuration conf = confBuilder()
                 .graph(name)
-                .withVertexCollection("v")
-                .withEdgeCollection("e")
-                .configureEdge("e", "v", "v")
+                .edgeDefinitions(EdgeDef.of("e").from("v").to("v"))
                 .build();
         Throwable thrown = catchThrowable(() -> graphInfo(conf));
         assertThat(thrown)
@@ -190,19 +159,14 @@ public class SimpleDataDefinitionTest extends DataDefinitionTest {
     public void existingSimpleGraphWithMoreEdgeDefinitions() {
         String name = "existingSimpleGraph";
         graphInfo(confBuilder()
-                .simpleGraph(false)
+                .graphType(ArangoDBGraphConfig.GraphType.COMPLEX)
                 .graph(name)
-                .withVertexCollection("a")
-                .withEdgeCollection("x")
-                .withEdgeCollection("y")
-                .configureEdge("x", "a", "a")
-                .configureEdge("y", "a", "a")
+                .edgeDefinitions(EdgeDef.of("x").from("a").to("a"))
+                .edgeDefinitions(EdgeDef.of("y").from("a").to("a"))
                 .build());
         Configuration conf = confBuilder()
                 .graph(name)
-                .withVertexCollection("a")
-                .withEdgeCollection("x")
-                .configureEdge("x", "a", "a")
+                .edgeDefinitions(EdgeDef.of("x").from("a").to("a"))
                 .build();
         Throwable thrown = catchThrowable(() -> graphInfo(conf));
         assertThat(thrown)
@@ -218,15 +182,13 @@ public class SimpleDataDefinitionTest extends DataDefinitionTest {
     public void existingSimpleGraphWithLessEdgeDefinitions() {
         String name = "existingSimpleGraph";
         graphInfo(confBuilder()
-                .simpleGraph(false)
+                .graphType(ArangoDBGraphConfig.GraphType.COMPLEX)
                 .graph(name)
-                .withVertexCollection("a")
+                .orphanCollections("a")
                 .build());
         Configuration conf = confBuilder()
                 .graph(name)
-                .withVertexCollection("a")
-                .withEdgeCollection("x")
-                .configureEdge("x", "a", "a")
+                .edgeDefinitions(EdgeDef.of("x").from("a").to("a"))
                 .build();
         Throwable thrown = catchThrowable(() -> graphInfo(conf));
         assertThat(thrown)

@@ -87,7 +87,7 @@ public class ArangoDBVertex extends ArangoDBElement<VertexPropertyData, VertexDa
         ElementId outVertexId = graph.getIdFactory().parseVertexId(id());
         ElementId inVertexId = graph.getIdFactory().parseVertexId(vertex.id());
         ArangoDBEdge edge = ArangoDBEdge.of(label, id, outVertexId, inVertexId, graph);
-        if (!graph.getPrefixedEdgeCollections().contains(edge.collection())) {
+        if (!graph.edgeCollections().contains(edge.collection())) {
             throw new IllegalArgumentException(String.format("Edge collection (%s) not in graph (%s).", edge.collection(), graph.name()));
         }
 
@@ -115,7 +115,7 @@ public class ArangoDBVertex extends ArangoDBElement<VertexPropertyData, VertexDa
 
     @Override
     public Iterator<Edge> edges(Direction direction, String... edgeLabels) {
-        List<String> edgeCollections = getQueryEdgeCollections(edgeLabels);
+        Set<String> edgeCollections = getQueryEdgeCollections(edgeLabels);
         // If edgeLabels was not empty but all were discarded, this means that we should
         // return an empty iterator, i.e. no edges for that edgeLabels exist.
         if (edgeCollections.isEmpty()) {
@@ -127,7 +127,7 @@ public class ArangoDBVertex extends ArangoDBElement<VertexPropertyData, VertexDa
 
     @Override
     public Iterator<Vertex> vertices(Direction direction, String... edgeLabels) {
-        List<String> edgeCollections = getQueryEdgeCollections(edgeLabels);
+        Set<String> edgeCollections = getQueryEdgeCollections(edgeLabels);
         // If edgeLabels was not empty but all were discarded, this means that we should
         // return an empty iterator, i.e. no edges for that edgeLabels exist.
         if (edgeCollections.isEmpty()) {
@@ -172,13 +172,13 @@ public class ArangoDBVertex extends ArangoDBElement<VertexPropertyData, VertexDa
      * Query will raise an exception if the edge_collection name is not in the graph, so we need to filter out
      * edgeLabels not in the graph.
      */
-    private List<String> getQueryEdgeCollections(String... edgeLabels) {
-        if (graph.isSimpleGraph() || edgeLabels.length == 0) {
-            return graph.getPrefixedEdgeCollections();
+    private Set<String> getQueryEdgeCollections(String... edgeLabels) {
+        if (graph.type() == ArangoDBGraphConfig.GraphType.SIMPLE || edgeLabels.length == 0) {
+            return graph.edgeCollections();
         }
         return Arrays.stream(edgeLabels)
                 .map(graph::getPrefixedCollectionName)
-                .filter(graph.getPrefixedEdgeCollections()::contains)
-                .collect(Collectors.toList());
+                .filter(graph.edgeCollections()::contains)
+                .collect(Collectors.toSet());
     }
 }

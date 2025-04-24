@@ -1,5 +1,7 @@
 package com.arangodb.tinkerpop.gremlin.persistence;
 
+import com.arangodb.tinkerpop.gremlin.structure.ArangoDBGraphConfig;
+import com.arangodb.tinkerpop.gremlin.structure.ArangoDBGraphConfig.GraphType;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
@@ -15,11 +17,11 @@ import static com.arangodb.tinkerpop.gremlin.structure.ArangoDBElement.Exception
 
 public class ElementIdFactory {
     private final String prefix;
-    private final boolean simpleGraph;
+    private final GraphType graphType;
 
-    public ElementIdFactory(String prefix, boolean simpleGraph) {
-        this.prefix = prefix;
-        this.simpleGraph = simpleGraph;
+    public ElementIdFactory(ArangoDBGraphConfig config) {
+        this.prefix = config.graphName;
+        this.graphType = config.graphType;
     }
 
     private String extractKey(final String id) {
@@ -36,7 +38,7 @@ public class ElementIdFactory {
     }
 
     private String inferCollection(final String collection, final String label, final String defaultLabel) {
-        if (simpleGraph) {
+        if (graphType == GraphType.SIMPLE) {
             return defaultLabel;
         }
         if (collection != null) {
@@ -117,17 +119,11 @@ public class ElementIdFactory {
     }
 
     private void validateId(String id) {
-        if (simpleGraph) {
-            if (id.contains("_")) {
-                throw new IllegalArgumentException(String.format("id (%s) contains invalid character '_'", id));
-            }
-            if (id.contains("/")) {
-                throw new IllegalArgumentException(String.format("id (%s) contains invalid character '/'", id));
-            }
-        } else {
-            if (id.contains("_")) {
-                throw new IllegalArgumentException(String.format("id (%s) contains invalid character '_'", id));
-            }
+        if (id.contains("_")) {
+            throw new IllegalArgumentException(String.format("id (%s) contains invalid character '_'", id));
+        }
+        if (graphType == GraphType.SIMPLE && id.contains("/")) {
+            throw new IllegalArgumentException(String.format("id (%s) contains invalid character '/'", id));
         }
     }
 
@@ -135,7 +131,7 @@ public class ElementIdFactory {
         Objects.requireNonNull(prefix);
         Objects.requireNonNull(collection);
         ElementId.validateIdParts(prefix, collection, key);
-        return simpleGraph ?
+        return graphType == GraphType.SIMPLE ?
                 new SimpleId(prefix, collection, key) :
                 new ArangoId(prefix, collection, key);
     }

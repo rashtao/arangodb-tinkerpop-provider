@@ -5,17 +5,22 @@ import com.arangodb.ArangoDBException;
 import com.arangodb.tinkerpop.gremlin.client.ArangoDBGraphClient;
 import com.arangodb.tinkerpop.gremlin.client.ArangoDBGraphException;
 import com.arangodb.tinkerpop.gremlin.structure.ArangoDBGraph;
+import com.arangodb.tinkerpop.gremlin.structure.ArangoDBGraphConfig;
+import org.apache.commons.configuration2.Configuration;
 
-import java.util.Properties;
 
 public class TestGraphClient extends ArangoDBGraphClient {
 
-    public TestGraphClient(Properties properties, String dbname) throws ArangoDBGraphException {
-        super(null, properties, dbname);
+    public TestGraphClient(Configuration config) throws ArangoDBGraphException {
+        super(new ArangoDBGraphConfig(config), null);
         if (!db.exists()) {
             if (!db.create()) {
-                throw new ArangoDBGraphException("Unable to crate the database " + dbname);
+                throw new ArangoDBGraphException("Unable to crate the database " + this.config.dbName);
             }
+        }
+        ArangoCollection varsCol = db.collection(ArangoDBGraph.GRAPH_VARIABLES_COLLECTION);
+        if (!varsCol.exists()) {
+            varsCol.create();
         }
     }
 

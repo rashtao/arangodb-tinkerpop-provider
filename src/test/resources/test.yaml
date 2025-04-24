@@ -1,0 +1,16 @@
+gremlin:
+  graph: "com.arangodb.tinkerpop.gremlin.structure.ArangoDBGraph"
+  arangodb:
+    conf:
+      graph:
+        db: ArangoDBGraphConfigTest
+        name: g
+        type: COMPLEX
+        orphanCollections: [ x, y, z ]
+        edgeDefinitions:
+          - "e1:[a]->[b]"
+          - "e1:[a]->[c]"
+          - "e2:[a,b]->[c,d]"
+      driver:
+        hosts: [ "127.0.0.1:8529" ]
+        password: test
