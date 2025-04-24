@@ -2,8 +2,9 @@ package com.arangodb.tinkerpop.gremlin.complex;
 
 import com.arangodb.entity.GraphEntity;
 import com.arangodb.tinkerpop.gremlin.DataDefinitionTest;
+import com.arangodb.tinkerpop.gremlin.structure.ArangoDBGraphConfig;
+import com.arangodb.tinkerpop.gremlin.structure.ArangoDBGraphConfig.EdgeDef;
 import org.apache.commons.configuration2.Configuration;
-import org.apache.tinkerpop.gremlin.util.CollectionUtil;
 import org.junit.Test;
 
 import java.lang.reflect.InvocationTargetException;
@@ -14,8 +15,8 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 public class ComplexDataDefinitionTest extends DataDefinitionTest {
 
     @Override
-    protected boolean isSimple() {
-        return false;
+    protected ArangoDBGraphConfig.GraphType graphType() {
+        return ArangoDBGraphConfig.GraphType.COMPLEX;
     }
 
     @Test
@@ -31,7 +32,7 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
     public void complexGraphWithoutEdges() {
         Configuration conf = confBuilder()
                 .graph("foo")
-                .withVertexCollection("v")
+                .orphanCollections("v")
                 .build();
         GraphEntity graphInfo = graphInfo(conf);
         assertThat(graphInfo).isNotNull();
@@ -46,9 +47,7 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
         String name = "complexGraph";
         Configuration conf = confBuilder()
                 .graph(name)
-                .withVertexCollection("v")
-                .withEdgeCollection("e")
-                .configureEdge("e", "v", "v")
+                .edgeDefinitions(EdgeDef.of("e").from("v").to("v"))
                 .build();
         GraphEntity graphInfo = graphInfo(conf);
         assertThat(graphInfo).isNotNull();
@@ -71,10 +70,8 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
         String name = "complexGraph";
         Configuration conf = confBuilder()
                 .graph(name)
-                .withVertexCollection("a")
-                .withVertexCollection("v")
-                .withEdgeCollection("e")
-                .configureEdge("e", "v", "v")
+                .orphanCollections("a")
+                .edgeDefinitions(EdgeDef.of("e").from("v").to("v"))
                 .build();
         GraphEntity graphInfo = graphInfo(conf);
         assertThat(graphInfo).isNotNull();
@@ -99,10 +96,7 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
         String name = "complexGraph";
         Configuration conf = confBuilder()
                 .graph(name)
-                .withVertexCollection("a")
-                .withVertexCollection("v")
-                .withEdgeCollection("e")
-                .configureEdge("e", CollectionUtil.asSet("v", "a"), CollectionUtil.asSet("a", "v"))
+                .edgeDefinitions(EdgeDef.of("e").from("v", "a").to("a", "v"))
                 .build();
         GraphEntity graphInfo = graphInfo(conf);
         assertThat(graphInfo).isNotNull();
@@ -127,11 +121,8 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
         String name = "complexGraph";
         Configuration conf = confBuilder()
                 .graph(name)
-                .withVertexCollection("a")
-                .withVertexCollection("v")
-                .withEdgeCollection("e")
-                .configureEdge("e", "v", "v")
-                .configureEdge("e", "a", "a")
+                .edgeDefinitions(EdgeDef.of("e").from("v").to("v"))
+                .edgeDefinitions(EdgeDef.of("e").from("a").to("a"))
                 .build();
         GraphEntity graphInfo = graphInfo(conf);
         assertThat(graphInfo).isNotNull();
@@ -156,19 +147,13 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
         String name = "complexGraph";
         graphInfo(confBuilder()
                 .graph(name)
-                .withVertexCollection("a")
-                .withVertexCollection("v")
-                .withEdgeCollection("e")
-                .configureEdge("e", "a", "a")
-                .configureEdge("e", "v", "v")
+                .edgeDefinitions(EdgeDef.of("e").from("a").to("a"))
+                .edgeDefinitions(EdgeDef.of("e").from("v").to("v"))
                 .build());
         Configuration conf = confBuilder()
                 .graph(name)
-                .withVertexCollection("a")
-                .withVertexCollection("v")
-                .withEdgeCollection("e")
-                .configureEdge("e", "v", "v")
-                .configureEdge("e", "a", "a")
+                .edgeDefinitions(EdgeDef.of("e").from("v").to("v"))
+                .edgeDefinitions(EdgeDef.of("e").from("a").to("a"))
                 .build();
         GraphEntity graphInfo = graphInfo(conf);
         assertThat(graphInfo).isNotNull();
@@ -192,9 +177,7 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
     public void complexGraphWithInvalidName() {
         Configuration conf = confBuilder()
                 .graph("foo_bar")
-                .withVertexCollection("vertex")
-                .withEdgeCollection("edge")
-                .configureEdge("edge", "vertex", "vertex")
+                .edgeDefinitions(EdgeDef.of("edge").from("vertex").to("vertex"))
                 .build();
         Throwable thrown = catchThrowable(() -> graphInfo(conf));
         assertThat(thrown)
@@ -210,9 +193,7 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
     public void complexGraphWithInvalidVertexName() {
         Configuration conf = confBuilder()
                 .graph("foo")
-                .withVertexCollection("foo_vertex")
-                .withEdgeCollection("edge")
-                .configureEdge("edge", "foo_vertex", "foo_vertex")
+                .edgeDefinitions(EdgeDef.of("edge").from("foo_ver_tex").to("foo_vertex"))
                 .build();
         Throwable thrown = catchThrowable(() -> graphInfo(conf));
         assertThat(thrown)
@@ -228,9 +209,7 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
     public void complexGraphWithInvalidEdgeName() {
         Configuration conf = confBuilder()
                 .graph("foo")
-                .withVertexCollection("vertex")
-                .withEdgeCollection("foo_edge")
-                .configureEdge("foo_edge", "vertex", "vertex")
+                .edgeDefinitions(EdgeDef.of("foo_ed_ge").from("vertex").to("vertex"))
                 .build();
         Throwable thrown = catchThrowable(() -> graphInfo(conf));
         assertThat(thrown)
@@ -243,48 +222,11 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
     }
 
     @Test
-    public void complexGraphWithoutEdgeDefinition() {
-        Configuration conf = confBuilder()
-                .graph("foo")
-                .withVertexCollection("vertex")
-                .withEdgeCollection("edge")
-                .build();
-        Throwable thrown = catchThrowable(() -> graphInfo(conf));
-        assertThat(thrown)
-                .isInstanceOf(RuntimeException.class)
-                .cause()
-                .isInstanceOf(InvocationTargetException.class);
-        assertThat(((InvocationTargetException) thrown.getCause()).getTargetException())
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Missing definition for edge");
-    }
-
-    @Test
-    public void complexGraphWithWrongEdgeDefinition() {
-        Configuration conf = confBuilder()
-                .graph("foo")
-                .withVertexCollection("vertex")
-                .withEdgeCollection("edge")
-                .configureEdge("edges", "vertexes", "vertexes")
-                .build();
-        Throwable thrown = catchThrowable(() -> graphInfo(conf));
-        assertThat(thrown)
-                .isInstanceOf(RuntimeException.class)
-                .cause()
-                .isInstanceOf(InvocationTargetException.class);
-        assertThat(((InvocationTargetException) thrown.getCause()).getTargetException())
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Missing definition for edge");
-    }
-
-    @Test
     public void existingComplexGraph() {
         String name = "existingComplexGraph";
         Configuration conf = confBuilder()
                 .graph(name)
-                .withVertexCollection("v")
-                .withEdgeCollection("e")
-                .configureEdge("e", "v", "v")
+                .edgeDefinitions(EdgeDef.of("e").from("v").to("v"))
                 .build();
         graphInfo(conf);
         GraphEntity graphInfo = graphInfo(conf);
@@ -308,16 +250,12 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
         String name = "existingComplexGraph";
         graphInfo(confBuilder()
                 .graph(name)
-                .withVertexCollection("a")
-                .withVertexCollection("v")
-                .withEdgeCollection("e")
-                .configureEdge("e", "v", "v")
+                .orphanCollections("a")
+                .edgeDefinitions(EdgeDef.of("e").from("v").to("v"))
                 .build());
         Configuration conf = confBuilder()
                 .graph(name)
-                .withVertexCollection("v")
-                .withEdgeCollection("e")
-                .configureEdge("e", "v", "v")
+                .edgeDefinitions(EdgeDef.of("e").from("v").to("v"))
                 .build();
         Throwable thrown = catchThrowable(() -> graphInfo(conf));
         assertThat(thrown)
@@ -334,16 +272,12 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
         String name = "existingComplexGraph";
         graphInfo(confBuilder()
                 .graph(name)
-                .withVertexCollection("v")
-                .withEdgeCollection("e")
-                .configureEdge("e", "v", "v")
+                .edgeDefinitions(EdgeDef.of("e").from("v").to("v"))
                 .build());
         Configuration conf = confBuilder()
                 .graph(name)
-                .withVertexCollection("a")
-                .withVertexCollection("v")
-                .withEdgeCollection("e")
-                .configureEdge("e", "v", "v")
+                .orphanCollections("a")
+                .edgeDefinitions(EdgeDef.of("e").from("v").to("v"))
                 .build();
         Throwable thrown = catchThrowable(() -> graphInfo(conf));
         assertThat(thrown)
@@ -360,19 +294,12 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
         String name = "existingComplexGraph";
         graphInfo(confBuilder()
                 .graph(name)
-                .withVertexCollection("a")
-                .withVertexCollection("b")
-                .withEdgeCollection("x")
-                .withEdgeCollection("y")
-                .configureEdge("x", "a", "b")
-                .configureEdge("y", "b", "a")
+                .edgeDefinitions(EdgeDef.of("x").from("a").to("b"))
+                .edgeDefinitions(EdgeDef.of("y").from("b").to("a"))
                 .build());
         Configuration conf = confBuilder()
                 .graph(name)
-                .withVertexCollection("a")
-                .withVertexCollection("b")
-                .withEdgeCollection("x")
-                .configureEdge("x", "a", "b")
+                .edgeDefinitions(EdgeDef.of("x").from("a").to("b"))
                 .build();
         Throwable thrown = catchThrowable(() -> graphInfo(conf));
         assertThat(thrown)
@@ -389,19 +316,12 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
         String name = "existingComplexGraph";
         graphInfo(confBuilder()
                 .graph(name)
-                .withVertexCollection("a")
-                .withVertexCollection("b")
-                .withEdgeCollection("x")
-                .configureEdge("x", "a", "b")
+                .edgeDefinitions(EdgeDef.of("x").from("a").to("b"))
                 .build());
         Configuration conf = confBuilder()
                 .graph(name)
-                .withVertexCollection("a")
-                .withVertexCollection("b")
-                .withEdgeCollection("x")
-                .withEdgeCollection("y")
-                .configureEdge("x", "a", "b")
-                .configureEdge("y", "b", "a")
+                .edgeDefinitions(EdgeDef.of("x").from("a").to("b"))
+                .edgeDefinitions(EdgeDef.of("y").from("b").to("a"))
                 .build();
         Throwable thrown = catchThrowable(() -> graphInfo(conf));
         assertThat(thrown)
@@ -418,17 +338,11 @@ public class ComplexDataDefinitionTest extends DataDefinitionTest {
         String name = "existingComplexGraph";
         graphInfo(confBuilder()
                 .graph(name)
-                .withVertexCollection("a")
-                .withVertexCollection("b")
-                .withEdgeCollection("x")
-                .configureEdge("x", "a", "b")
+                .edgeDefinitions(EdgeDef.of("x").from("a").to("b"))
                 .build());
         Configuration conf = confBuilder()
                 .graph(name)
-                .withVertexCollection("a")
-                .withVertexCollection("b")
-                .withEdgeCollection("x")
-                .configureEdge("x", "b", "a")
+                .edgeDefinitions(EdgeDef.of("x").from("b").to("a"))
                 .build();
         Throwable thrown = catchThrowable(() -> graphInfo(conf));
         assertThat(thrown)

@@ -1,9 +1,11 @@
-package com.arangodb.tinkerpop.gremlin;
+package com.arangodb.tinkerpop.gremlin.simple;
 
+import com.arangodb.tinkerpop.gremlin.AbstractTest;
+import com.arangodb.tinkerpop.gremlin.PackageVersion;
 import com.arangodb.tinkerpop.gremlin.persistence.VariablesData;
 import com.arangodb.tinkerpop.gremlin.structure.ArangoDBGraph;
 import com.arangodb.tinkerpop.gremlin.structure.ArangoDBGraphVariables;
-import org.apache.commons.configuration2.BaseConfiguration;
+import org.apache.commons.configuration2.Configuration;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -15,7 +17,7 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 @SuppressWarnings("resource")
 public class GraphVariablesTest extends AbstractTest {
 
-    private BaseConfiguration conf;
+    private Configuration conf;
     private String name;
 
     @Before

@@ -9,8 +9,8 @@
 package com.arangodb.tinkerpop.gremlin.utils;
 
 import com.arangodb.entity.EdgeDefinition;
+import com.arangodb.entity.GraphEntity;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.arangodb.tinkerpop.gremlin.client.ArangoDBGraphException;
 import com.arangodb.tinkerpop.gremlin.client.ArangoDBQueryBuilder;
 import com.arangodb.tinkerpop.gremlin.structure.*;
 import com.arangodb.tinkerpop.gremlin.PackageVersion;
@@ -58,50 +58,6 @@ public class ArangoDBUtil {
     }
 
     /**
-     * Create an EdgeDefinition from a relation in the Configuration. The format of a relation is:
-     * <pre>
-     * collection:from-&gt;to
-     * </pre>
-     * Where collection is the name of the Edge collection, and to and from are comma separated list of
-     * node collection names.
-     *
-     * @param graph    the name of the graph
-     * @param relation the relation
-     * @return an EdgeDefinition that represents the relation.
-     * @throws ArangoDBGraphException if the relation is malformed
-     */
-
-    public static EdgeDefinition relationPropertyToEdgeDefinition(ArangoDBGraph graph, String relation) throws ArangoDBGraphException {
-        logger.debug("Creating EdgeRelation from {}", relation);
-        EdgeDefinition result = new EdgeDefinition();
-        String[] info = relation.split(":");
-        if (info.length != 2) {
-            throw new ArangoDBGraphException("Error in configuration. Malformed relation " + relation);
-        }
-        result.collection(graph.getPrefixedCollectionName(info[0]));
-        info = info[1].split("->");
-        if (info.length != 2) {
-            throw new ArangoDBGraphException("Error in configuration. Malformed relation> " + relation);
-        }
-        List<String> trimmed = Arrays.stream(info[0].split(","))
-                .map(String::trim)
-                .map(graph::getPrefixedCollectionName)
-                .collect(Collectors.toList());
-        String[] from = new String[trimmed.size()];
-        from = trimmed.toArray(from);
-
-        trimmed = Arrays.stream(info[1].split(","))
-                .map(String::trim)
-                .map(graph::getPrefixedCollectionName)
-                .collect(Collectors.toList());
-        String[] to = new String[trimmed.size()];
-        to = trimmed.toArray(to);
-        result.from(from).to(to);
-        return result;
-    }
-
-
-    /**
      * Gets a collection that is unique for the given graph.
      *
      * @param graphName                 the graph name
@@ -118,21 +74,33 @@ public class ArangoDBUtil {
         }
     }
 
-    public static boolean equal(Collection<EdgeDefinition> a, Collection<EdgeDefinition> b) {
-        return CollectionUtils.isEqualCollection(a, b, new EdgeDefinitionEquator());
+    public static void checkExistingGraph(GraphEntity info, ArangoDBGraphConfig config) {
+        // check orphanCollections
+        if (!CollectionUtils.isEqualCollection(info.getOrphanCollections(), config.orphanCollections)) {
+            throw new IllegalStateException("Orphan collections do not match. From DB: "
+                    + info.getOrphanCollections() + ", From config: " + config.orphanCollections);
+        }
 
+        // check edgeDefinitions
+        Set<ArangoDBGraphConfig.EdgeDef> dbDefs = info.getEdgeDefinitions().stream()
+                .map(ArangoDBGraphConfig.EdgeDef::of)
+                .collect(Collectors.toSet());
+        if (!CollectionUtils.isEqualCollection(dbDefs, config.edgeDefinitions, new EdgeDefEquator())) {
+            throw new IllegalStateException("Edge definitions do not match. From DB: "
+                    + dbDefs + ", From config: " + config.edgeDefinitions);
+        }
     }
 
-    private static class EdgeDefinitionEquator implements Equator<EdgeDefinition> {
+    private static class EdgeDefEquator implements Equator<ArangoDBGraphConfig.EdgeDef> {
         @Override
-        public boolean equate(EdgeDefinition a, EdgeDefinition b) {
+        public boolean equate(ArangoDBGraphConfig.EdgeDef a, ArangoDBGraphConfig.EdgeDef b) {
             return a.getCollection().equals(b.getCollection()) &&
                     CollectionUtils.isEqualCollection(a.getFrom(), b.getFrom()) &&
                     CollectionUtils.isEqualCollection(a.getTo(), b.getTo());
         }
 
         @Override
-        public int hash(EdgeDefinition o) {
+        public int hash(ArangoDBGraphConfig.EdgeDef o) {
             return Objects.hash(o.getCollection(), new HashSet<>(o.getFrom()), new HashSet<>(o.getTo()));
         }
     }
