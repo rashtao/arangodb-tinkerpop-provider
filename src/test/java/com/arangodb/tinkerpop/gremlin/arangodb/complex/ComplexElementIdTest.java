@@ -81,4 +81,13 @@ public class ComplexElementIdTest extends AbstractGremlinTest {
                 .hasMessageContaining("invalid character '_'");
     }
 
+    @Test
+    public void prefix() {
+        assumeThat(graph().type()).isEqualTo(ArangoDBGraphConfig.GraphType.COMPLEX);
+
+        String prefix = graph().name() + "_";
+        assertThat(graph.addVertex(T.id, prefix + "foo/a").id()).isEqualTo("foo/a");
+        assertThat(graph.addVertex(T.id, prefix + "foo/b", T.label, "foo").id()).isEqualTo("foo/b");
+    }
+
 }

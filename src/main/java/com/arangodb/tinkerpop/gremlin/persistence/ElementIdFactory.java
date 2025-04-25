@@ -119,11 +119,22 @@ public class ElementIdFactory {
     }
 
     private void validateId(String id) {
-        if (id.contains("_")) {
-            throw new IllegalArgumentException(String.format("id (%s) contains invalid character '_'", id));
-        }
-        if (graphType == GraphType.SIMPLE && id.contains("/")) {
-            throw new IllegalArgumentException(String.format("id (%s) contains invalid character '/'", id));
+        switch (graphType) {
+            case SIMPLE:
+                if (id.contains("_")) {
+                    throw new IllegalArgumentException(String.format("id (%s) contains invalid character '_'", id));
+                }
+                if (id.contains("/")) {
+                    throw new IllegalArgumentException(String.format("id (%s) contains invalid character '/'", id));
+                }
+                break;
+            case COMPLEX:
+                if (id.replaceFirst("^" + prefix + "_", "").contains("_")) {
+                    throw new IllegalArgumentException(String.format("id (%s) contains invalid character '_'", id));
+                }
+                break;
+            default:
+                throw new IllegalArgumentException();
         }
     }
 
