@@ -286,4 +286,17 @@
         <url>http://kinori.tech</url>
     </organization>
 
+    <repositories>
+        <repository>
+            <id>arangodb-snapshots</id>
+            <url>https://oss.sonatype.org/content/groups/staging</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+        </repository>
+    </repositories>
+
 </project>
