@@ -19,10 +19,10 @@ public interface ElementId {
             if (name == null)
                 continue;
             if (name.contains("_")) {
-                throw new IllegalArgumentException(String.format("key (%s) contains invalid character '_'", name));
+                throw new IllegalArgumentException(String.format("id part (%s) contains invalid character '_'", name));
             }
             if (name.contains("/")) {
-                throw new IllegalArgumentException(String.format("key (%s) contains invalid character '/'", name));
+                throw new IllegalArgumentException(String.format("id part (%s) contains invalid character '/'", name));
             }
         }
     }

@@ -2,6 +2,7 @@ package com.arangodb.tinkerpop.gremlin.complex;
 
 import com.arangodb.config.HostDescription;
 import com.arangodb.tinkerpop.gremlin.AbstractTest;
+import com.arangodb.tinkerpop.gremlin.structure.ArangoDBGraph;
 import com.arangodb.tinkerpop.gremlin.structure.ArangoDBGraphConfig;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.Test;
@@ -9,12 +10,14 @@ import org.junit.Test;
 import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SuppressWarnings("resource")
 public class ArangoDBGraphConfigTest extends AbstractTest {
 
     @Test
     public void loadConfigFromFile() {
         client.clear("g");
-        ArangoDBGraphConfig conf = new ArangoDBGraphConfig(createGraph("src/test/resources/test.yaml").configuration());
+        ArangoDBGraph g = createGraph("src/test/resources/test.yaml");
+        ArangoDBGraphConfig conf = new ArangoDBGraphConfig(g.configuration());
         assertThat(conf.dbName).isEqualTo(dbName);
         assertThat(conf.graphName).isEqualTo("g");
         assertThat(conf.prefix).isEqualTo("g_");
