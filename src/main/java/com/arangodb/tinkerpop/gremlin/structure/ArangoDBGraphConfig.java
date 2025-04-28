@@ -178,10 +178,6 @@ public class ArangoDBGraphConfig {
                 '}';
     }
 
-    /**
-     * When using a complex graph, elements ids have format: `<graph>_<label>/<key>`.
-     * When using a simple graph, elements ids are strings without format constraints.
-     */
     public enum GraphType {
         /**
          * Type of graph that allows only:

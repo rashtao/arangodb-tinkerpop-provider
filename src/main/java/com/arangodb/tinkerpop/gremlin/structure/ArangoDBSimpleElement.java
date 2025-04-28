@@ -1,12 +1,13 @@
 package com.arangodb.tinkerpop.gremlin.structure;
 
 import com.arangodb.tinkerpop.gremlin.persistence.AdbValue;
+import com.arangodb.tinkerpop.gremlin.persistence.PersistentData;
 import com.arangodb.tinkerpop.gremlin.persistence.SimplePropertyData;
 import org.apache.tinkerpop.gremlin.structure.Property;
 import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
 
 public abstract class ArangoDBSimpleElement<D extends SimplePropertyData> extends ArangoDBElement<AdbValue, D> {
-    public ArangoDBSimpleElement(ArangoDBGraph graph, D data) {
+    ArangoDBSimpleElement(ArangoDBGraph graph, D data) {
         super(graph, data);
     }
 
@@ -26,7 +27,7 @@ public abstract class ArangoDBSimpleElement<D extends SimplePropertyData> extend
         return createProperty(key, dataValue);
     }
 
-    public void removeProperty(String key) {
+    void removeProperty(String key) {
         if (removed()) throw Exceptions.elementAlreadyRemoved(id());
         data.remove(key);
         doUpdate();

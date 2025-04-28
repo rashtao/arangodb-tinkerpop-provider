@@ -35,7 +35,7 @@ public abstract class ArangoDBElement<P, D extends PropertyData<P>> implements E
     protected final D data;
     private boolean removed = false;
 
-    public ArangoDBElement(ArangoDBGraph graph, D data) {
+    ArangoDBElement(ArangoDBGraph graph, D data) {
         this.graph = graph;
         this.data = data;
     }

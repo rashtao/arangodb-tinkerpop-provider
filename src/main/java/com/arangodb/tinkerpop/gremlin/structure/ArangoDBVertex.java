@@ -34,12 +34,12 @@ import static com.arangodb.tinkerpop.gremlin.structure.ArangoDBElement.Exception
 
 public class ArangoDBVertex extends ArangoDBElement<VertexPropertyData, VertexData> implements Vertex, ArangoDBPersistentElement {
 
-    public static ArangoDBVertex of(String label, ElementId id, ArangoDBGraph graph) {
+    static ArangoDBVertex of(String label, ElementId id, ArangoDBGraph graph) {
         String inferredLabel = label != null ? label : Optional.ofNullable(id.getLabel()).orElse(Vertex.DEFAULT_LABEL);
         return new ArangoDBVertex(graph, VertexData.of(inferredLabel, id));
     }
 
-    public ArangoDBVertex(ArangoDBGraph graph, VertexData data) {
+    ArangoDBVertex(ArangoDBGraph graph, VertexData data) {
         super(graph, data);
     }
 
@@ -162,16 +162,12 @@ public class ArangoDBVertex extends ArangoDBElement<VertexPropertyData, VertexDa
         return IteratorUtils.cast(super.properties(propertyKeys));
     }
 
-    public void removeProperty(ArangoDBVertexProperty<?> prop) {
+    void removeProperty(ArangoDBVertexProperty<?> prop) {
         if (removed()) throw ArangoDBElement.Exceptions.elementAlreadyRemoved(id());
         data.remove(prop.key(), prop.data());
         doUpdate();
     }
 
-    /**
-     * Query will raise an exception if the edge_collection name is not in the graph, so we need to filter out
-     * edgeLabels not in the graph.
-     */
     private Set<String> getQueryEdgeCollections(String... edgeLabels) {
         if (graph.type() == ArangoDBGraphConfig.GraphType.SIMPLE || edgeLabels.length == 0) {
             return graph.edgeCollections();

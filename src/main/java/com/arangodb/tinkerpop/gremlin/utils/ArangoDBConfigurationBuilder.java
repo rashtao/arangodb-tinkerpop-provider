@@ -20,24 +20,6 @@ import static com.arangodb.config.ArangoConfigProperties.*;
 import static com.arangodb.tinkerpop.gremlin.structure.ArangoDBGraphConfig.*;
 
 
-/**
- * The Class ArangoDBConfigurationBuilder provides a convenient method for creating ArangoDB graph
- * configurations.
- * If no parameters are set the default values used are:
- * <ul>
- * <li>dbName: tinkerpop
- * <li>graphName: graph
- * <li>vertices: (empty - use default ArangoDBGraph settings)
- * <li>edges: (empty - use default ArangoDBGraph settings)
- * <li>relations: (empty - use default ArangoDBGraph settigns)
- * <li>user: gremlin
- * <li>password: gremlin
- * <li>other db settings: (default ArangoDB Java driver settings).
- * <li>collectionNames: prefixed with graphName</li>
- * </ul>
- *
- * @author Horacio Hoyos Rodriguez (https://www.york.ac.uk)
- */
 public class ArangoDBConfigurationBuilder {
 
     private final BaseConfiguration config = new BaseConfiguration();

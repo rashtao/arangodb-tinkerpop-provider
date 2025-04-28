@@ -10,9 +10,9 @@ package com.arangodb.tinkerpop.gremlin.utils;
 
 import com.arangodb.entity.EdgeDefinition;
 import com.arangodb.entity.GraphEntity;
+import com.arangodb.tinkerpop.gremlin.structure.ArangoDBGraphConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.arangodb.tinkerpop.gremlin.client.ArangoDBQueryBuilder;
-import com.arangodb.tinkerpop.gremlin.structure.*;
 import com.arangodb.tinkerpop.gremlin.PackageVersion;
 
 import java.util.*;
@@ -30,10 +30,6 @@ import org.slf4j.LoggerFactory;
 /**
  * This class provides utility methods for creating properties and for normalising property and
  * collections names (to satisfy Arango DB naming conventions.
- *
- * @author Achim Brandt (http://www.triagens.de)
- * @author Johannes Gocke (http://www.triagens.de)
- * @author Horacio Hoyos Rodriguez (https://www.york.ac.uk)
  */
 //FIXME We should add more util methods to validate attribute names, e.g. scape ".".
 public class ArangoDBUtil {

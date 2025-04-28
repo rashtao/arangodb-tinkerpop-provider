@@ -35,12 +35,6 @@ import static com.arangodb.tinkerpop.gremlin.utils.ArangoDBUtil.getArangoDirecti
 /**
  * The arangodb graph client class handles the HTTP connection to arangodb and performs database
  * operations on the ArangoDatabase.
- *
- * @author Achim Brandt (http://www.triagens.de)
- * @author Johannes Gocke (http://www.triagens.de)
- * @author Guido Schwab (http://www.triagens.de)
- * @author Jan Steemann (http://www.triagens.de)
- * @author Horacio Hoyos Rodriguez (https://www.york.ac.uk)
  */
 
 public class ArangoDBGraphClient {
