@@ -26,7 +26,7 @@ public class ArangoDBGraphVariables implements Graph.Variables {
     private final ArangoDBGraph graph;
     private final VariablesData data;
 
-    public ArangoDBGraphVariables(ArangoDBGraph graph, VariablesData data) {
+    ArangoDBGraphVariables(ArangoDBGraph graph, VariablesData data) {
         this.graph = graph;
         this.data = data;
     }
@@ -35,7 +35,7 @@ public class ArangoDBGraphVariables implements Graph.Variables {
         return data.getVersion();
     }
 
-    public void updateVersion(String version) {
+    void updateVersion(String version) {
         data.setVersion(version);
         update();
     }

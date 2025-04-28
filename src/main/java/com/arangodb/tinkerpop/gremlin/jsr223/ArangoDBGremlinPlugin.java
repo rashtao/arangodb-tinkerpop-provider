@@ -19,8 +19,6 @@ import com.arangodb.tinkerpop.gremlin.utils.ArangoDBUtil;
 
 /**
  * The Class ArangoDBGremlinPlugin.
- *
- * @author Horacio Hoyos Rodriguez (https://www.york.ac.uk)
  */
 public class ArangoDBGremlinPlugin extends AbstractGremlinPlugin {
 

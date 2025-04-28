@@ -21,8 +21,6 @@ import org.slf4j.LoggerFactory;
  * The ArangoDB Query Builder class provides static methods for building AQL fragments that can be concatenated to build
  * complete AQL queries. Note that all parameters used to create query fragments are used as is, hence, all
  * pre-processing (e.g. prefix collection names) must be done in the callee.
- *
- * @author Horacio Hoyos Rodriguez (https://www.york.ac.uk)
  */
 public class ArangoDBQueryBuilder {
 	

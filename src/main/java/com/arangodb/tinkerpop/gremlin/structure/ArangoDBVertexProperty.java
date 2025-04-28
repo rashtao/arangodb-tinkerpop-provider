@@ -31,7 +31,7 @@ public class ArangoDBVertexProperty<P> extends ArangoDBSimpleElement<VertexPrope
     private final String key;
     private final ArangoDBVertex vertex;
 
-    public ArangoDBVertexProperty(String key, VertexPropertyData data, ArangoDBVertex vertex) {
+    ArangoDBVertexProperty(String key, VertexPropertyData data, ArangoDBVertex vertex) {
         super(vertex.graph(), data);
         this.key = key;
         this.vertex = vertex;

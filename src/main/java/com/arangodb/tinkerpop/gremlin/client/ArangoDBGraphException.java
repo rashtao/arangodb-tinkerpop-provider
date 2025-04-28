@@ -10,8 +10,6 @@ package com.arangodb.tinkerpop.gremlin.client;
 
 /**
  * The ArangoDBGraphException is used to signal all exceptions related to the graph operations.
- * 
- * @author Horacio Hoyos Rodriguez (https://www.york.ac.uk)
  */
 
 public class ArangoDBGraphException extends RuntimeException {
