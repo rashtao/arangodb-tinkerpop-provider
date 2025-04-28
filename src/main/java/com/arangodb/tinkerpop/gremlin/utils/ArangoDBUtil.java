@@ -27,47 +27,12 @@ import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * This class provides utility methods for creating properties and for normalising property and
- * collections names (to satisfy Arango DB naming conventions.
- */
-//FIXME We should add more util methods to validate attribute names, e.g. scape ".".
 public class ArangoDBUtil {
 
-    /**
-     * The Logger.
-     */
-
     private static final Logger logger = LoggerFactory.getLogger(ArangoDBUtil.class);
-
-    /**
-     * Utiliy mapper for conversions.
-     **/
-
     private static final ObjectMapper mapper = new ObjectMapper();
 
-    /**
-     * Instantiates a new ArangoDB Util.
-     */
     private ArangoDBUtil() {
-        // this is a helper class
-    }
-
-    /**
-     * Gets a collection that is unique for the given graph.
-     *
-     * @param graphName                 the graph name
-     * @param collectionName            the collection name
-     * @param shouldPrefixWithGraphName flag to indicate if the name should be prefixed
-     * @return the unique collection name
-     */
-    @Deprecated
-    public static String getCollectioName(String graphName, String collectionName, Boolean shouldPrefixWithGraphName) {
-        if (shouldPrefixWithGraphName) {
-            return String.format("%s_%s", graphName, collectionName);
-        } else {
-            return collectionName;
-        }
     }
 
     public static void checkExistingGraph(GraphEntity info, ArangoDBGraphConfig config) {
@@ -108,7 +73,6 @@ public class ArangoDBUtil {
                         .collect(Collectors.joining(",")) +
                 "]";
     }
-
 
     public static String toString(EdgeDefinition edgeDefinition) {
         return "{" +
@@ -176,7 +140,6 @@ public class ArangoDBUtil {
      * @param <V>        the value type
      * @return the        correct Java primitive
      */
-
     @SuppressWarnings("unchecked")
     public static <V> Object getCorretctPrimitive(V value, String valueClass) {
 
