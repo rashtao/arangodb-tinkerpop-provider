@@ -32,11 +32,6 @@ import org.slf4j.LoggerFactory;
 
 import static com.arangodb.tinkerpop.gremlin.utils.ArangoDBUtil.getArangoDirectionFromGremlinDirection;
 
-/**
- * The arangodb graph client class handles the HTTP connection to arangodb and performs database
- * operations on the ArangoDatabase.
- */
-
 public class ArangoDBGraphClient {
 
     private static final Logger logger = LoggerFactory.getLogger(ArangoDBGraphClient.class);
@@ -77,10 +72,6 @@ public class ArangoDBGraphClient {
         });
         return module;
     }
-
-    /**
-     * Shutdown the client and free resources.
-     */
 
     public void shutdown() {
         logger.debug("Shutdown");
@@ -138,9 +129,8 @@ public class ArangoDBGraphClient {
      * Get vertices of a graph. If no ids are provided, get all vertices.
      *
      * @param ids the ids to match
-     * @return ArangoDBBaseQuery    the query object
+     * @return the documents
      */
-
     // FIXME: use multi-docs API
     public ArangoIterable<VertexData> getGraphVertices(final List<ElementId> ids) {
         logger.debug("Get all {} graph vertices, filtered by ids: {}", config.graphName, ids);
@@ -151,7 +141,7 @@ public class ArangoDBGraphClient {
      * Get edges of a graph. If no ids are provided, get all edges.
      *
      * @param ids the ids to match
-     * @return ArangoDBBaseQuery    the query object
+     * @return the documents
      */
     // FIXME: use multi-docs API
     public ArangoIterable<EdgeData> getGraphEdges(List<ElementId> ids) {
@@ -186,13 +176,12 @@ public class ArangoDBGraphClient {
      * @param name              the name of the new graph
      * @param edgeDefinitions   the edge definitions for the graph
      * @param orphanCollections orphan collections
-     * @throws ArangoDBGraphException If the graph can not be created
      */
-
-    public void createGraph(String name,
-                            Set<ArangoDBGraphConfig.EdgeDef> edgeDefinitions,
-                            Set<String> orphanCollections)
-            throws ArangoDBGraphException {
+    public void createGraph(
+            String name,
+            Set<ArangoDBGraphConfig.EdgeDef> edgeDefinitions,
+            Set<String> orphanCollections
+    ) throws ArangoDBGraphException {
         logger.debug("Creating graph {}", name);
         Set<EdgeDefinition> defs = edgeDefinitions.stream()
                 .map(ArangoDBGraphConfig.EdgeDef::toDbDefinition)
@@ -213,7 +202,6 @@ public class ArangoDBGraphClient {
      *
      * @return the graph or null if the graph was not found
      */
-
     public ArangoGraph getArangoGraph() {
         return db.graph(config.graphName);
     }
@@ -229,7 +217,6 @@ public class ArangoDBGraphClient {
      * @return the cursor result
      * @throws ArangoDBGraphException if executing the query raised an exception
      */
-
     public <V> ArangoCursor<V> executeAqlQuery(
             String query,
             Map<String, Object> bindVars,
@@ -393,6 +380,7 @@ public class ArangoDBGraphClient {
      * meaningful exceptions with standard messages. ArangoDBException exception is a RuntimeException intended to
      * break execution.
      */
+    // TODO: review
     public static class ArangoDBExceptions {
 
         /**
