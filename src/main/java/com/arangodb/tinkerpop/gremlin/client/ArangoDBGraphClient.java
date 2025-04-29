@@ -187,7 +187,7 @@ public class ArangoDBGraphClient {
     private <V> ArangoCursor<V> executeAqlQuery(String query, Class<V> type) {
         logger.debug("Executing AQL query: {}", query);
         try {
-            return db.query(query, type);
+            return db.query(query, type, new AqlQueryOptions().failOnWarning(true));
         } catch (ArangoDBException e) {
             logger.error("Error executing query", e);
             throw mapException(e);
