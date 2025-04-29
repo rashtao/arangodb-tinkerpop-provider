@@ -12,7 +12,6 @@ import com.arangodb.entity.EdgeDefinition;
 import com.arangodb.entity.GraphEntity;
 import com.arangodb.tinkerpop.gremlin.structure.ArangoDBGraphConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.arangodb.tinkerpop.gremlin.client.ArangoDBQueryBuilder;
 import com.arangodb.tinkerpop.gremlin.PackageVersion;
 
 import java.util.*;
@@ -23,7 +22,6 @@ import java.util.stream.IntStream;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.Equator;
-import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -278,24 +276,6 @@ public class ArangoDBUtil {
                 logger.debug("Add conversion for {} to {}", value.getClass().getName(), valueClass);
         }
         return value;
-    }
-
-    /**
-     * Translate a Gremlin direction to Arango direction
-     *
-     * @param direction the direction to translate
-     * @return the ArangoDBQueryBuilder.Direction that represents the gremlin direction
-     */
-    public static ArangoDBQueryBuilder.Direction getArangoDirectionFromGremlinDirection(final Direction direction) {
-        switch (direction) {
-            case BOTH:
-                return ArangoDBQueryBuilder.Direction.ALL;
-            case IN:
-                return ArangoDBQueryBuilder.Direction.IN;
-            case OUT:
-                return ArangoDBQueryBuilder.Direction.OUT;
-        }
-        throw new IllegalArgumentException("Unsupported direction: " + direction);
     }
 
 }

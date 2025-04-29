@@ -61,6 +61,7 @@ public class ArangoDBGraph implements Graph {
             client.createGraph(name(), config.edgeDefinitions, config.orphanCollections);
         }
 
+        client.ensureVariablesDataCollection();
         VariablesData variablesData = Optional
                 .ofNullable(client.getGraphVariables())
                 .orElseGet(() -> client.insertGraphVariables(new VariablesData(name(), PackageVersion.VERSION)));
