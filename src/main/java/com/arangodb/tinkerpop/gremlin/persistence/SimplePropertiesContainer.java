@@ -27,18 +27,18 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-public class SimplePropertyData implements PropertyData<AdbValue> {
+public abstract class SimplePropertiesContainer implements PropertiesContainer<PropertyValue> {
 
     @JsonProperty
-    private final Map<String, AdbValue> properties = new HashMap<>();
+    protected final Map<String, PropertyValue> properties = new HashMap<>();
 
     @Override
-    public Stream<Map.Entry<String, AdbValue>> entries() {
+    public Stream<Map.Entry<String, PropertyValue>> entries() {
         return properties.entrySet().stream();
     }
 
     @Override
-    public void add(String key, AdbValue value) {
+    public void add(String key, PropertyValue value) {
         properties.put(key, value);
     }
 
@@ -55,8 +55,8 @@ public class SimplePropertyData implements PropertyData<AdbValue> {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof SimplePropertyData)) return false;
-        SimplePropertyData that = (SimplePropertyData) o;
+        if (!(o instanceof SimplePropertiesContainer)) return false;
+        SimplePropertiesContainer that = (SimplePropertiesContainer) o;
         return Objects.equals(properties, that.properties);
     }
 

@@ -27,7 +27,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.*;
 
-public class EdgeData extends SimplePropertyData implements PersistentData {
+public class EdgeData extends SimplePropertiesContainer implements PersistentData {
 
     @Id
     private ElementId id;

@@ -11,24 +11,17 @@ package com.arangodb.tinkerpop.gremlin.utils;
 import com.arangodb.entity.EdgeDefinition;
 import com.arangodb.entity.GraphEntity;
 import com.arangodb.tinkerpop.gremlin.structure.ArangoDBGraphConfig;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.arangodb.tinkerpop.gremlin.PackageVersion;
 
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.Equator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ArangoDBUtil {
-
-    private static final Logger logger = LoggerFactory.getLogger(ArangoDBUtil.class);
-    private static final ObjectMapper mapper = new ObjectMapper();
 
     private ArangoDBUtil() {
     }
@@ -128,154 +121,6 @@ public class ArangoDBUtil {
 
             return Integer.compare(aPatch, bPatch);
         }
-    }
-
-    /**
-     * Gets the correct primitive.
-     *
-     * @param value      the value
-     * @param valueClass the exoected class of the value
-     * @param <V>        the value type
-     * @return the        correct Java primitive
-     */
-    @SuppressWarnings("unchecked")
-    public static <V> Object getCorretctPrimitive(V value, String valueClass) {
-
-        switch (valueClass) {
-            case "java.lang.Float": {
-                if (value instanceof Double) {
-                    return ((Double) value).floatValue();
-                } else if (value instanceof Long) {
-                    return ((Long) value).floatValue();
-                } else if (value instanceof Integer) {
-                    return ((Integer) value).floatValue();
-                } else {
-                    logger.debug("Add conversion for {} to {}", value.getClass().getName(), valueClass);
-                }
-                break;
-            }
-            case "java.lang.Double": {
-                if (value instanceof Double) {
-                    return value;
-                } else if (value instanceof Long) {
-                    return ((Long) value).doubleValue();
-                } else if (value instanceof Integer) {
-                    return ((Integer) value).doubleValue();
-                } else {
-                    logger.debug("Add conversion for {} to {}", value.getClass().getName(), valueClass);
-                }
-                break;
-            }
-            case "java.lang.Long": {
-                if (value instanceof Long) {
-                    return value;
-                } else if (value instanceof Double) {
-                    return ((Double) value).longValue();
-                } else if (value instanceof Integer) {
-                    return ((Integer) value).longValue();
-                } else {
-                    logger.debug("Add conversion for {} to {}", value.getClass().getName(), valueClass);
-                }
-                break;
-            }
-            case "java.lang.Integer": {
-                if (value instanceof Long) {
-                    return ((Long) value).intValue();
-                }
-                break;
-            }
-            case "java.lang.String":
-            case "java.lang.Boolean":
-            case "":
-                return value;
-            case "java.util.HashMap":
-                //logger.debug(((Map<?,?>)value).keySet().stream().map(Object::getClass).collect(Collectors.toList()));
-                //logger.debug("Add conversion for map values to " + valueClass);
-                // Maps are handled by ArangoOK, but we have an extra field, remove it
-                Map<String, ?> valueMap = (Map<String, ?>) value;
-                for (String key : valueMap.keySet()) {
-                    if (key.startsWith("_")) {
-                        valueMap.remove(key);
-                    }
-                    // We might need to check individual values...
-                }
-                break;
-            case "java.util.ArrayList":
-                // Should we save the type per item?
-                List<Object> list = new ArrayList<>();
-                ((ArrayList<?>) value).forEach(e -> list.add(getCorretctPrimitive(e, "")));
-                return list;
-            case "boolean[]":
-                if (value instanceof List) {
-                    List<Object> barray = (List<Object>) value;
-                    boolean[] br = new boolean[barray.size()];
-                    IntStream.range(0, barray.size())
-                            .forEach(i -> br[i] = (boolean) barray.get(i));
-                    return br;
-                } else {
-                    return value;
-                }
-            case "double[]":
-                if (value instanceof List) {
-                    List<Object> darray = (List<Object>) value;
-                    double[] dr = new double[darray.size()];
-                    IntStream.range(0, darray.size())
-                            .forEach(i -> dr[i] = (double) getCorretctPrimitive(darray.get(i), "java.lang.Double"));
-                    return dr;
-                } else {
-                    return value;
-                }
-            case "float[]":
-                if (value instanceof List) {
-                    List<Object> farray = (List<Object>) value;
-                    float[] fr = new float[farray.size()];
-                    IntStream.range(0, farray.size())
-                            .forEach(i -> fr[i] = (float) getCorretctPrimitive(farray.get(i), "java.lang.Float"));
-                    return fr;
-                } else {
-                    return value;
-                }
-            case "int[]":
-                if (value instanceof List) {
-                    List<Object> iarray = (List<Object>) value;
-                    int[] ir = new int[iarray.size()];
-                    IntStream.range(0, iarray.size())
-                            .forEach(i -> ir[i] = (int) getCorretctPrimitive(iarray.get(i), "java.lang.Integer"));
-                    return ir;
-                } else {
-                    return value;
-                }
-            case "long[]":
-                if (value instanceof List) {
-                    List<Object> larray = (List<Object>) value;
-                    long[] lr = new long[larray.size()];
-                    IntStream.range(0, larray.size())
-                            .forEach(i -> lr[i] = (long) getCorretctPrimitive(larray.get(i), "java.lang.Long"));
-                    return lr;
-                } else {
-                    return value;
-                }
-            case "java.lang.String[]":
-                if (value instanceof List) {
-                    List<Object> sarray = (List<Object>) value;
-                    String[] sr = new String[sarray.size()];
-                    IntStream.range(0, sarray.size())
-                            .forEach(i -> sr[i] = (String) sarray.get(i));
-                    return sr;
-                } else {
-                    return value;
-                }
-            default:
-                Object result;
-                try {
-                    result = mapper.convertValue(value, Class.forName(valueClass));
-                    return result;
-                } catch (IllegalArgumentException | ClassNotFoundException e1) {
-                    logger.warn("Type not deserializable", e1);
-                }
-                logger.debug("Add conversion for {} to {}", value.getClass().getName(), valueClass);
-        }
-        return value;
     }
 
 }

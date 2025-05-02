@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Objects;
 
-public class VariablesData extends SimplePropertyData {
+public class VariablesData extends SimplePropertiesContainer {
 
     private final String key;
     private String version;

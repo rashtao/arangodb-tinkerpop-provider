@@ -26,7 +26,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.*;
 import java.util.stream.Stream;
 
-public class VertexData implements PropertyData<VertexPropertyData>, PersistentData {
+public class VertexData implements PropertiesContainer<VertexPropertyData>, PersistentData {
 
     @Id
     private ElementId id;

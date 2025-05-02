@@ -14,7 +14,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.arangodb.tinkerpop.gremlin.persistence.AdbValue;
+import com.arangodb.tinkerpop.gremlin.persistence.PropertyValue;
 import com.arangodb.tinkerpop.gremlin.persistence.VariablesData;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.util.GraphVariableHelper;
@@ -61,7 +61,7 @@ public class ArangoDBGraphVariables implements Graph.Variables {
     @Override
     public void set(String key, Object value) {
         GraphVariableHelper.validateVariable(key, value);
-        data.add(key, AdbValue.of(value));
+        data.add(key, new PropertyValue(value));
         update();
     }
 
