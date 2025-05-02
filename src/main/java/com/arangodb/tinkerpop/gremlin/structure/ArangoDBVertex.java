@@ -66,7 +66,7 @@ public class ArangoDBVertex extends ArangoDBElement<VertexPropertyData, VertexDa
                 })
                 .orElseGet(() -> UUID.randomUUID().toString());
 
-        VertexPropertyData prop = VertexPropertyData.of(idValue, value);
+        VertexPropertyData prop = new VertexPropertyData(idValue, value);
         data.add(key, prop);
 
         ArangoDBVertexProperty<V> vertexProperty = new ArangoDBVertexProperty<>(key, prop, this);

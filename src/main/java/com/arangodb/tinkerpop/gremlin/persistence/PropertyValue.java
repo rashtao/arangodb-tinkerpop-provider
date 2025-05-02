@@ -25,26 +25,17 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import com.fasterxml.jackson.databind.type.MapType;
-import com.fasterxml.jackson.databind.type.TypeFactory;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.Objects;
 
-@JsonDeserialize(using = VertexPropertyData.VertexPropertyDataDeserializer.class)
-public final class VertexPropertyData extends SimplePropertiesContainer {
+@JsonDeserialize(using = PropertyValue.PropertyValueDeserializer.class)
+public final class PropertyValue {
 
-    private final String id;
     private final Object value;
 
-    public VertexPropertyData(String id, Object value) {
-        this.id = id;
+    public PropertyValue(Object value) {
         this.value = value;
-    }
-
-    public String getId() {
-        return id;
     }
 
     public Object getValue() {
@@ -58,48 +49,36 @@ public final class VertexPropertyData extends SimplePropertiesContainer {
 
     @Override
     public String toString() {
-        return "VertexPropertyData{" +
-                "id='" + id + '\'' +
-                ", value=" + value +
-                ", super=" + super.toString() +
+        return "PropertyValue{" +
+                "value=" + value +
                 '}';
     }
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof VertexPropertyData)) return false;
-        if (!super.equals(o)) return false;
-        VertexPropertyData that = (VertexPropertyData) o;
-        return Objects.equals(id, that.id) && Objects.equals(value, that.value);
+        if (!(o instanceof PropertyValue)) return false;
+        PropertyValue that = (PropertyValue) o;
+        return Objects.equals(value, that.value);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), id, value);
+        return Objects.hashCode(value);
     }
 
-    public static class VertexPropertyDataDeserializer extends StdDeserializer<VertexPropertyData> {
-        private static final MapType propertiesType = TypeFactory.defaultInstance()
-                .constructMapType(Map.class, String.class, PropertyValue.class);
-
-        public VertexPropertyDataDeserializer() {
-            super(VertexPropertyData.class);
+    public static class PropertyValueDeserializer extends StdDeserializer<PropertyValue> {
+        public PropertyValueDeserializer() {
+            super(PropertyValue.class);
         }
 
         @Override
-        public VertexPropertyData deserialize(JsonParser p, DeserializationContext ctx) throws IOException {
+        public PropertyValue deserialize(JsonParser p, DeserializationContext ctx) throws IOException {
             ObjectCodec c = p.getCodec();
             JsonNode node = c.readTree(p);
-            String id = node.get("id").textValue();
             Class<?> type = c.treeToValue(node.get("type"), Class.class);
             Object value = c.treeToValue(node.get("value"), type);
-            VertexPropertyData vp = new VertexPropertyData(id, value);
-            JsonNode pNode = node.get("properties");
-            if (pNode != null) {
-                Map<String, PropertyValue> props = c.readValue(c.treeAsTokens(pNode), propertiesType);
-                props.forEach(vp::add);
-            }
-            return vp;
+            return new PropertyValue(value);
         }
     }
 }
+    

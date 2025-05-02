@@ -19,7 +19,7 @@
 
 package com.arangodb.tinkerpop.gremlin.structure;
 
-import com.arangodb.tinkerpop.gremlin.persistence.PropertyData;
+import com.arangodb.tinkerpop.gremlin.persistence.PropertiesContainer;
 import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Property;
 import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
@@ -29,7 +29,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public abstract class ArangoDBElement<P, D extends PropertyData<P>> implements Element {
+public abstract class ArangoDBElement<P, D extends PropertiesContainer<P>> implements Element {
 
     protected final ArangoDBGraph graph;
     protected final D data;
