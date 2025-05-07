@@ -7,7 +7,7 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 @Graph.OptIn(Graph.OptIn.SUITE_STRUCTURE_STANDARD)
 @Graph.OptIn(Graph.OptIn.SUITE_PROCESS_STANDARD)
 @Graph.OptIn("com.arangodb.tinkerpop.gremlin.custom.CustomStandardSuite")
-@Graph.OptIn("com.arangodb.tinkerpop.gremlin.arangodb.ArangoDBSuite")
+@Graph.OptIn("com.arangodb.tinkerpop.gremlin.arangodb.simple.SimpleArangoDBSuite")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.structure.util.detached.DetachedGraphTest",
         method = "testAttachableCreateMethod",
