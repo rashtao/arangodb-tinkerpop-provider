@@ -20,6 +20,8 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.Equator;
+import org.apache.tinkerpop.gremlin.structure.Graph;
+import org.apache.tinkerpop.gremlin.structure.Property;
 
 public class ArangoDBUtil {
 
@@ -73,6 +75,27 @@ public class ArangoDBUtil {
                 "to:" +
                 String.join(",", edgeDefinition.getTo()) +
                 "}";
+    }
+
+    public static void validatePropertyValue(Object value) {
+        if (!supportsDataType(value)) {
+            throw Property.Exceptions.dataTypeOfPropertyValueNotSupported(value);
+        }
+    }
+
+    public static void validateVariableValue(Object value) {
+        if (!supportsDataType(value)) {
+            throw Graph.Variables.Exceptions.dataTypeOfVariableValueNotSupported(value);
+        }
+    }
+
+    private static boolean supportsDataType(Object value) {
+        return value == null ||
+                value instanceof Boolean || value instanceof boolean[] ||
+                value instanceof Double || value instanceof double[] ||
+                value instanceof Integer || value instanceof int[] ||
+                value instanceof Long || value instanceof long[] ||
+                value instanceof String || value instanceof String[];
     }
 
     public static void checkVersion(String version) {

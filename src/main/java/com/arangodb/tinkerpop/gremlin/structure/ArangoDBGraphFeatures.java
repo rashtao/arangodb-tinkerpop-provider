@@ -41,7 +41,37 @@ public class ArangoDBGraphFeatures implements Graph.Features {
         }
 
         @Override
+        public boolean supportsFloatValues() {
+            return false;
+        }
+
+        @Override
+        public boolean supportsMapValues() {
+            return false;
+        }
+
+        @Override
+        public boolean supportsMixedListValues() {
+            return false;
+        }
+
+        @Override
         public boolean supportsByteArrayValues() {
+            return false;
+        }
+
+        @Override
+        public boolean supportsFloatArrayValues() {
+            return false;
+        }
+
+        @Override
+        public boolean supportsSerializableValues() {
+            return false;
+        }
+
+        @Override
+        public boolean supportsUniformListValues() {
             return false;
         }
     }

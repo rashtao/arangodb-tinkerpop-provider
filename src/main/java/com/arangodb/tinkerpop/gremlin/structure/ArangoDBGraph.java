@@ -90,6 +90,9 @@ public class ArangoDBGraph implements Graph {
 
         // TODO: optimize writing only once
         vertex.doInsert();
+        for (int i = 1; i < keyValues.length; i = i + 2) {
+            ArangoDBUtil.validatePropertyValue(keyValues[i]);
+        }
         ElementHelper.attachProperties(vertex, keyValues);
         return vertex;
     }

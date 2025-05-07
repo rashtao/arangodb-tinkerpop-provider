@@ -14,8 +14,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.arangodb.tinkerpop.gremlin.persistence.PropertyValue;
 import com.arangodb.tinkerpop.gremlin.persistence.VariablesData;
+import com.arangodb.tinkerpop.gremlin.utils.ArangoDBUtil;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.util.GraphVariableHelper;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
@@ -54,14 +54,15 @@ public class ArangoDBGraphVariables implements Graph.Variables {
         return data.entries()
                 .filter(e -> key.equals(e.getKey()))
                 .map(Map.Entry::getValue)
-                .map(it -> (R) it.getValue())
+                .map(it -> (R) it)
                 .findFirst();
     }
 
     @Override
     public void set(String key, Object value) {
         GraphVariableHelper.validateVariable(key, value);
-        data.add(key, new PropertyValue(value));
+        ArangoDBUtil.validateVariableValue(value);
+        data.add(key, value);
         update();
     }
 

@@ -8,6 +8,7 @@
 
 package com.arangodb.tinkerpop.gremlin.utils;
 
+import com.arangodb.Protocol;
 import com.arangodb.config.ArangoConfigProperties;
 import com.arangodb.tinkerpop.gremlin.structure.ArangoDBGraphConfig;
 import org.apache.commons.configuration2.BaseConfiguration;
@@ -163,6 +164,16 @@ public class ArangoDBConfigurationBuilder {
      */
     public ArangoDBConfigurationBuilder password(String password) {
         return setDriverProperty(KEY_PASSWORD, password);
+    }
+
+    /**
+     * Set the communication protocol.
+     *
+     * @param protocol the protocol
+     * @return this
+     */
+    public ArangoDBConfigurationBuilder protocol(Protocol protocol) {
+        return setDriverProperty(KEY_PROTOCOL, protocol.toString());
     }
 
     /**
