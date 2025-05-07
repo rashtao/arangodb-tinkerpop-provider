@@ -1,7 +1,6 @@
 package com.arangodb.tinkerpop.gremlin.arangodb.complex;
 
 import com.arangodb.tinkerpop.gremlin.structure.ArangoDBGraph;
-import com.arangodb.tinkerpop.gremlin.structure.ArangoDBGraphConfig;
 import org.apache.tinkerpop.gremlin.AbstractGremlinTest;
 import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
@@ -9,19 +8,11 @@ import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
-import static org.assertj.core.api.Assumptions.assumeThat;
 
-@SuppressWarnings("resource")
 public class ComplexElementIdTest extends AbstractGremlinTest {
-
-    protected ArangoDBGraph graph() {
-        return (ArangoDBGraph) graph;
-    }
 
     @Test
     public void id() {
-        assumeThat(graph().type()).isEqualTo(ArangoDBGraphConfig.GraphType.COMPLEX);
-
         assertThat(graph.addVertex(T.id, "foo/a").id()).isEqualTo("foo/a");
         assertThat(graph.addVertex(T.id, "foo/b", T.label, "foo").id()).isEqualTo("foo/b");
         assertThat(graph.addVertex(T.id, "c", T.label, "foo").id()).isEqualTo("foo/c");
@@ -62,8 +53,6 @@ public class ComplexElementIdTest extends AbstractGremlinTest {
 
     @Test
     public void label() {
-        assumeThat(graph().type()).isEqualTo(ArangoDBGraphConfig.GraphType.COMPLEX);
-
         assertThat(graph.addVertex(T.id, "foo/a").label()).isEqualTo("foo");
         assertThat(graph.addVertex(T.id, "foo/b", T.label, "foo").label()).isEqualTo("foo");
         assertThat(graph.addVertex(T.id, "c", T.label, "foo").label()).isEqualTo("foo");
@@ -83,11 +72,8 @@ public class ComplexElementIdTest extends AbstractGremlinTest {
 
     @Test
     public void prefix() {
-        assumeThat(graph().type()).isEqualTo(ArangoDBGraphConfig.GraphType.COMPLEX);
-
-        String prefix = graph().name() + "_";
+        String prefix = ((ArangoDBGraph) graph).name() + "_";
         assertThat(graph.addVertex(T.id, prefix + "foo/a").id()).isEqualTo("foo/a");
         assertThat(graph.addVertex(T.id, prefix + "foo/b", T.label, "foo").id()).isEqualTo("foo/b");
     }
-
 }

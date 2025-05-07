@@ -42,7 +42,6 @@ public abstract class TestGraphProvider extends AbstractGraphProvider {
                                                final String testMethodName,
                                                final Map<String, Object> configurationOverrides,
                                                final LoadGraphWith.GraphData loadGraphWith) {
-        System.out.println(test.getName() + "#" + testMethodName);
         ArangoDBConfigurationBuilder builder = confBuilder().graph(graphName);
         configureDataDefinitions(builder, test, testMethodName, loadGraphWith);
         return builder.build();
