@@ -27,18 +27,18 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-public abstract class SimplePropertiesContainer implements PropertiesContainer<PropertyValue> {
+public abstract class SimplePropertiesContainer implements PropertiesContainer<Object> {
 
     @JsonProperty
-    protected final Map<String, PropertyValue> properties = new HashMap<>();
+    private final Map<String, Object> properties = new HashMap<>();
 
     @Override
-    public Stream<Map.Entry<String, PropertyValue>> entries() {
+    public Stream<Map.Entry<String, Object>> entries() {
         return properties.entrySet().stream();
     }
 
     @Override
-    public void add(String key, PropertyValue value) {
+    public void add(String key, Object value) {
         properties.put(key, value);
     }
 

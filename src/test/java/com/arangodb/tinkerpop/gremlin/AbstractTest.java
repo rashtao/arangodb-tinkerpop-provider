@@ -1,5 +1,6 @@
 package com.arangodb.tinkerpop.gremlin;
 
+import com.arangodb.Protocol;
 import com.arangodb.entity.GraphEntity;
 import com.arangodb.tinkerpop.gremlin.structure.ArangoDBGraph;
 import com.arangodb.tinkerpop.gremlin.structure.ArangoDBGraphConfig;
@@ -35,6 +36,7 @@ public abstract class AbstractTest {
                 .hosts("127.0.0.1:8529")
                 .user("root")
                 .password("test")
+                .protocol(Protocol.HTTP2_VPACK)
                 .database(dbName);
     }
 

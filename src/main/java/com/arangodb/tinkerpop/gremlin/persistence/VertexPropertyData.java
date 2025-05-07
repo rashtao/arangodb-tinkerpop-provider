@@ -19,24 +19,27 @@
 
 package com.arangodb.tinkerpop.gremlin.persistence;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.*;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import com.fasterxml.jackson.databind.type.MapType;
-import com.fasterxml.jackson.databind.type.TypeFactory;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
 
-@JsonDeserialize(using = VertexPropertyData.VertexPropertyDataDeserializer.class)
 public final class VertexPropertyData extends SimplePropertiesContainer {
 
     private final String id;
     private final Object value;
+
+    @JsonCreator
+    public VertexPropertyData(
+            @JsonProperty("id") String id,
+            @JsonProperty("value") Object value,
+            @JsonProperty("properties") Map<String, Object> properties) {
+        this(id, value);
+        if (properties != null) {
+            properties.forEach(this::add);
+        }
+    }
 
     public VertexPropertyData(String id, Object value) {
         this.id = id;
@@ -49,11 +52,6 @@ public final class VertexPropertyData extends SimplePropertiesContainer {
 
     public Object getValue() {
         return value;
-    }
-
-    @JsonProperty
-    public String getType() {
-        return (value != null ? value.getClass() : Void.class).getCanonicalName();
     }
 
     @Override
@@ -76,30 +74,5 @@ public final class VertexPropertyData extends SimplePropertiesContainer {
     @Override
     public int hashCode() {
         return Objects.hash(super.hashCode(), id, value);
-    }
-
-    public static class VertexPropertyDataDeserializer extends StdDeserializer<VertexPropertyData> {
-        private static final MapType propertiesType = TypeFactory.defaultInstance()
-                .constructMapType(Map.class, String.class, PropertyValue.class);
-
-        public VertexPropertyDataDeserializer() {
-            super(VertexPropertyData.class);
-        }
-
-        @Override
-        public VertexPropertyData deserialize(JsonParser p, DeserializationContext ctx) throws IOException {
-            ObjectCodec c = p.getCodec();
-            JsonNode node = c.readTree(p);
-            String id = node.get("id").textValue();
-            Class<?> type = c.treeToValue(node.get("type"), Class.class);
-            Object value = c.treeToValue(node.get("value"), type);
-            VertexPropertyData vp = new VertexPropertyData(id, value);
-            JsonNode pNode = node.get("properties");
-            if (pNode != null) {
-                Map<String, PropertyValue> props = c.readValue(c.treeAsTokens(pNode), propertiesType);
-                props.forEach(vp::add);
-            }
-            return vp;
-        }
     }
 }

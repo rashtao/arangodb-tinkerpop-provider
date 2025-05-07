@@ -1,5 +1,6 @@
 package com.arangodb.tinkerpop.gremlin;
 
+import com.arangodb.Protocol;
 import com.arangodb.tinkerpop.gremlin.structure.*;
 import com.arangodb.tinkerpop.gremlin.utils.ArangoDBConfigurationBuilder;
 import org.apache.commons.configuration2.Configuration;
@@ -30,6 +31,7 @@ public abstract class TestGraphProvider extends AbstractGraphProvider {
                 .hosts("127.0.0.1:8529")
                 .user("root")
                 .password("test")
+                .protocol(Protocol.HTTP2_VPACK)
                 .database(dbName);
         customizeBuilder(builder);
         return builder;
