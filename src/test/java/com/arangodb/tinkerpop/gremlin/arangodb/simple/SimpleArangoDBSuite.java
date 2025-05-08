@@ -10,6 +10,7 @@ public class SimpleArangoDBSuite extends AbstractGremlinSuite {
     private static final Class<?>[] allTests = new Class<?>[]{
             SimpleElementIdTest.class,
             DataTypesTest.class,
+            PersistenceTest.class,
     };
 
     public SimpleArangoDBSuite(final Class<?> klass, final RunnerBuilder builder) throws InitializationError {
