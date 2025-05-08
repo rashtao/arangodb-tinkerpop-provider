@@ -24,9 +24,8 @@ import com.arangodb.serde.jackson.Key;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.*;
-import java.util.stream.Stream;
 
-public class VertexData implements PropertiesContainer<VertexPropertyData>, PersistentData {
+public class VertexData extends PropertiesContainer<VertexPropertyData> implements PersistentData {
 
     @Id
     private ElementId id;
@@ -36,12 +35,6 @@ public class VertexData implements PropertiesContainer<VertexPropertyData>, Pers
 
     @Key
     private String key;
-
-    @JsonProperty
-    private final Map<String, VertexPropertyData> properties = new HashMap<>();
-
-    public VertexData() {
-    }
 
     public static VertexData of(String label, ElementId id) {
         VertexData data = new VertexData();
@@ -72,38 +65,25 @@ public class VertexData implements PropertiesContainer<VertexPropertyData>, Pers
     }
 
     @Override
-    public Stream<Map.Entry<String, VertexPropertyData>> entries() {
-        return properties.entrySet().stream();
-    }
-
-    @Override
-    public void add(String key, VertexPropertyData value) {
-        properties.put(key, value);
-    }
-
-    public void remove(String key) {
-        properties.remove(key);
-    }
-
-    @Override
     public String toString() {
         return "VertexData{" +
                 "id=" + id +
                 ", label='" + label + '\'' +
                 ", key='" + key + '\'' +
-                ", properties=" + properties +
+                ", super=" + super.toString() +
                 '}';
     }
 
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof VertexData)) return false;
+        if (!super.equals(o)) return false;
         VertexData that = (VertexData) o;
-        return Objects.equals(id, that.id) && Objects.equals(label, that.label) && Objects.equals(key, that.key) && Objects.equals(properties, that.properties);
+        return Objects.equals(id, that.id) && Objects.equals(label, that.label) && Objects.equals(key, that.key);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, label, key, properties);
+        return Objects.hash(super.hashCode(), id, label, key);
     }
 }

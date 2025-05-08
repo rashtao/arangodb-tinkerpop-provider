@@ -42,8 +42,7 @@ public class ArangoDBGraphVariables implements Graph.Variables {
 
     @Override
     public Set<String> keys() {
-        return data.entries()
-                .map(Map.Entry::getKey)
+        return data.keySet().stream()
                 .filter(it -> !Graph.Hidden.isHidden(it))
                 .collect(Collectors.toSet());
     }
@@ -51,18 +50,14 @@ public class ArangoDBGraphVariables implements Graph.Variables {
     @SuppressWarnings("unchecked")
     @Override
     public <R> Optional<R> get(String key) {
-        return data.entries()
-                .filter(e -> key.equals(e.getKey()))
-                .map(Map.Entry::getValue)
-                .map(it -> (R) it)
-                .findFirst();
+        return Optional.ofNullable((R) data.get(key));
     }
 
     @Override
     public void set(String key, Object value) {
         GraphVariableHelper.validateVariable(key, value);
         ArangoDBUtil.validateVariableValue(value);
-        data.add(key, value);
+        data.put(key, value);
         update();
     }
 
