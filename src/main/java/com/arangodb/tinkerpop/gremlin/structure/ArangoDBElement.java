@@ -77,11 +77,10 @@ public abstract class ArangoDBElement<P, D extends PropertiesContainer<P>> imple
         if (removed) return Collections.emptyIterator();
         Stream<String> ups;
         if (propertyKeys == null || propertyKeys.length == 0) {
-            ups = data.keySet().stream();
+            ups = data.keySet().stream()
+                    .filter(key -> !Graph.Hidden.isHidden(key));
         } else {
             ups = Arrays.stream(propertyKeys)
-                    .peek(Objects::requireNonNull)
-                    .filter(key -> !Graph.Hidden.isHidden(key))
                     .filter(data::containsKey);
         }
         return ups
