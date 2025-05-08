@@ -25,7 +25,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Map;
 import java.util.Objects;
 
-public final class VertexPropertyData extends SimplePropertiesContainer {
+public final class VertexPropertyData extends PropertiesContainer<Object> {
 
     private final Object value;
 
@@ -35,7 +35,7 @@ public final class VertexPropertyData extends SimplePropertiesContainer {
             @JsonProperty("properties") Map<String, Object> properties) {
         this(value);
         if (properties != null) {
-            properties.forEach(this::add);
+            properties.forEach(this::put);
         }
     }
 

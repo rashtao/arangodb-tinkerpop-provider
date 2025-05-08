@@ -21,13 +21,13 @@ package com.arangodb.tinkerpop.gremlin.structure;
 
 import com.arangodb.tinkerpop.gremlin.persistence.PropertiesContainer;
 import org.apache.tinkerpop.gremlin.structure.Element;
+import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Property;
 import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
 
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public abstract class ArangoDBElement<P, D extends PropertiesContainer<P>> implements Element {
 
@@ -75,9 +75,17 @@ public abstract class ArangoDBElement<P, D extends PropertiesContainer<P>> imple
     @Override
     public <V> Iterator<? extends Property<V>> properties(String... propertyKeys) {
         if (removed) return Collections.emptyIterator();
-        return data.entries()
-                .filter(entry -> ElementHelper.keyExists(entry.getKey(), propertyKeys))
-                .map((Map.Entry<String, P> e) -> this.<V>createProperty(e.getKey(), e.getValue()))
+        Stream<String> ups;
+        if (propertyKeys == null || propertyKeys.length == 0) {
+            ups = data.keySet().stream();
+        } else {
+            ups = Arrays.stream(propertyKeys)
+                    .peek(Objects::requireNonNull)
+                    .filter(key -> !Graph.Hidden.isHidden(key))
+                    .filter(data::containsKey);
+        }
+        return ups
+                .map(key -> this.<V>createProperty(key, data.get(key)))
                 .collect(Collectors.toList()) // avoids ConcurrentModificationException on removal from downstream
                 .iterator();
     }
@@ -104,10 +112,6 @@ public abstract class ArangoDBElement<P, D extends PropertiesContainer<P>> imple
 
         public static IllegalStateException elementAlreadyRemoved(final Object id) {
             return new IllegalStateException(String.format("Element with id %s was removed.", id));
-        }
-
-        public static IllegalStateException unsupportedIdType(final Object id) {
-            return new IllegalStateException(String.format("Unsupported id type [%s]: %s", id.getClass().getSimpleName(), id));
         }
     }
 }

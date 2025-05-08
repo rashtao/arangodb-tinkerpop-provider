@@ -13,7 +13,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.arangodb.tinkerpop.gremlin.structure.ArangoDBElement.Exceptions.unsupportedIdType;
 
 public class ElementIdFactory {
     private final String prefix;
@@ -67,7 +66,7 @@ public class ElementIdFactory {
         } else if (id instanceof Element) {
             return parseVertexId(((Element) id).id());
         } else {
-            throw unsupportedIdType(id);
+            throw Vertex.Exceptions.userSuppliedIdsOfThisTypeNotSupported();
         }
     }
 
@@ -83,7 +82,7 @@ public class ElementIdFactory {
         } else if (id instanceof Element) {
             return parseEdgeId(((Element) id).id());
         } else {
-            throw unsupportedIdType(id);
+            throw Edge.Exceptions.userSuppliedIdsOfThisTypeNotSupported();
         }
     }
 

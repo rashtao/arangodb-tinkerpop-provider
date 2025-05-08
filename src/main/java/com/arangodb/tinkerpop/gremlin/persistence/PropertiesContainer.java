@@ -19,13 +19,56 @@
 
 package com.arangodb.tinkerpop.gremlin.persistence;
 
-import java.util.Map;
-import java.util.stream.Stream;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-// TODO: review
-public interface PropertiesContainer<V> {
+import java.util.*;
 
-    Stream<Map.Entry<String, V>> entries();
 
-    void add(String key, V value);
+public abstract class PropertiesContainer<V> {
+
+    @JsonProperty
+    private Map<String, V> properties = new HashMap<>();
+
+    public Set<String> keySet() {
+        return properties.keySet();
+    }
+
+    public Collection<V> values() {
+        return properties.values();
+    }
+
+    public V get(String key) {
+        return properties.get(key);
+    }
+
+    public boolean containsKey(String key) {
+        return properties.containsKey(key);
+    }
+
+    public void put(String key, V value) {
+        properties.put(key, value);
+    }
+
+    public void remove(String key) {
+        properties.remove(key);
+    }
+
+    @Override
+    public String toString() {
+        return "PropertiesContainer{" +
+                "properties=" + properties +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof PropertiesContainer)) return false;
+        PropertiesContainer<?> that = (PropertiesContainer<?>) o;
+        return Objects.equals(properties, that.properties);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(properties);
+    }
 }

@@ -65,7 +65,7 @@ public class ArangoDBVertex extends ArangoDBElement<VertexPropertyData, VertexDa
         }
 
         VertexPropertyData prop = new VertexPropertyData(value);
-        data.add(key, prop);
+        data.put(key, prop);
         doUpdate();
 
         ArangoDBVertexProperty<V> vertexProperty = new ArangoDBVertexProperty<>(key, prop, this);
