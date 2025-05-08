@@ -65,7 +65,7 @@ public class ArangoDBVertexProperty<P> extends ArangoDBSimpleElement<VertexPrope
 
     @Override
     public Object id() {
-        return data.getId();
+        return Objects.hash(key, data.getValue(), vertex.id());
     }
 
     @Override

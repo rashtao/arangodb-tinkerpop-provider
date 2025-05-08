@@ -38,7 +38,7 @@ public class VertexData implements PropertiesContainer<VertexPropertyData>, Pers
     private String key;
 
     @JsonProperty
-    private final Map<String, List<VertexPropertyData>> properties = new HashMap<>();
+    private final Map<String, VertexPropertyData> properties = new HashMap<>();
 
     public VertexData() {
     }
@@ -73,21 +73,16 @@ public class VertexData implements PropertiesContainer<VertexPropertyData>, Pers
 
     @Override
     public Stream<Map.Entry<String, VertexPropertyData>> entries() {
-        return properties.entrySet().stream().flatMap(e -> e.getValue().stream()
-                .map(v -> new AbstractMap.SimpleImmutableEntry<>(e.getKey(), v)));
+        return properties.entrySet().stream();
     }
 
     @Override
     public void add(String key, VertexPropertyData value) {
-        properties.computeIfAbsent(key, k -> new ArrayList<>()).add(value);
+        properties.put(key, value);
     }
 
-    public void remove(String key, VertexPropertyData value) {
-        List<VertexPropertyData> props = properties.getOrDefault(key, Collections.emptyList());
-        props.remove(value);
-        if (props.isEmpty()) {
-            properties.remove(key);
-        }
+    public void remove(String key) {
+        properties.remove(key);
     }
 
     @Override
