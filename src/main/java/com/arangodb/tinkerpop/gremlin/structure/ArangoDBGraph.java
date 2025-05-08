@@ -83,16 +83,15 @@ public class ArangoDBGraph implements Graph {
         ElementHelper.legalPropertyKeyValueArray(keyValues);
         String label = ElementHelper.getLabelValue(keyValues).orElse(null);
         ElementId id = idFactory.createVertexId(label, keyValues);
+        for (int i = 1; i < keyValues.length; i = i + 2) {
+            ArangoDBUtil.validatePropertyValue(keyValues[i]);
+        }
         ArangoDBVertex vertex = ArangoDBVertex.of(label, id, this);
         if (!config.vertices.contains(vertex.collection())) {
             throw new IllegalArgumentException(String.format("Vertex collection (%s) not in graph (%s).", vertex.collection(), name()));
         }
 
-        // TODO: optimize writing only once
         vertex.doInsert();
-        for (int i = 1; i < keyValues.length; i = i + 2) {
-            ArangoDBUtil.validatePropertyValue(keyValues[i]);
-        }
         ElementHelper.attachProperties(vertex, keyValues);
         return vertex;
     }

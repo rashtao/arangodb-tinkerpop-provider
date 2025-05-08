@@ -103,22 +103,12 @@ public class ArangoDBGraphFeatures implements Graph.Features {
 
     public static class ArangoDBGraphVertexPropertyFeatures extends ArangoDBGraphPropertyFeatures implements VertexPropertyFeatures {
         @Override
+        public boolean supportsUserSuppliedIds() {
+            return false;
+        }
+
+        @Override
         public boolean supportsAnyIds() {
-            return false;
-        }
-
-        @Override
-        public boolean supportsCustomIds() {
-            return false;
-        }
-
-        @Override
-        public boolean supportsNumericIds() {
-            return false;
-        }
-
-        @Override
-        public boolean supportsUuidIds() {
             return false;
         }
     }
@@ -127,6 +117,16 @@ public class ArangoDBGraphFeatures implements Graph.Features {
         @Override
         public VertexPropertyFeatures properties() {
             return new ArangoDBGraphVertexPropertyFeatures();
+        }
+
+        @Override
+        public boolean supportsMultiProperties() {
+            return false;
+        }
+
+        @Override
+        public VertexProperty.Cardinality getCardinality(final String key) {
+            return VertexProperty.Cardinality.single;
         }
     }
 

@@ -27,27 +27,20 @@ import java.util.Objects;
 
 public final class VertexPropertyData extends SimplePropertiesContainer {
 
-    private final String id;
     private final Object value;
 
     @JsonCreator
     public VertexPropertyData(
-            @JsonProperty("id") String id,
             @JsonProperty("value") Object value,
             @JsonProperty("properties") Map<String, Object> properties) {
-        this(id, value);
+        this(value);
         if (properties != null) {
             properties.forEach(this::add);
         }
     }
 
-    public VertexPropertyData(String id, Object value) {
-        this.id = id;
+    public VertexPropertyData(Object value) {
         this.value = value;
-    }
-
-    public String getId() {
-        return id;
     }
 
     public Object getValue() {
@@ -57,7 +50,6 @@ public final class VertexPropertyData extends SimplePropertiesContainer {
     @Override
     public String toString() {
         return "VertexPropertyData{" +
-                "id='" + id + '\'' +
                 ", value=" + value +
                 ", super=" + super.toString() +
                 '}';
@@ -68,11 +60,11 @@ public final class VertexPropertyData extends SimplePropertiesContainer {
         if (!(o instanceof VertexPropertyData)) return false;
         if (!super.equals(o)) return false;
         VertexPropertyData that = (VertexPropertyData) o;
-        return Objects.equals(id, that.id) && Objects.equals(value, that.value);
+        return Objects.equals(value, that.value);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), id, value);
+        return Objects.hash(super.hashCode(), value);
     }
 }

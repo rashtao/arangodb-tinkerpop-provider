@@ -53,26 +53,23 @@ public class ArangoDBVertex extends ArangoDBElement<VertexPropertyData, VertexDa
         if (removed()) throw elementAlreadyRemoved(id());
         ElementHelper.legalPropertyKeyValueArray(keyValues);
         ElementHelper.validateProperty(key, value);
+        if (ElementHelper.getIdValue(keyValues).isPresent())
+            throw VertexProperty.Exceptions.userSuppliedIdsNotSupported();
 
-        Optional<VertexProperty<V>> optionalVertexProperty = ElementHelper.stageVertexProperty(this, cardinality, key, value, keyValues);
-        if (optionalVertexProperty.isPresent()) return optionalVertexProperty.get();
+        if (cardinality != VertexProperty.Cardinality.single)
+            throw VertexProperty.Exceptions.multiPropertiesNotSupported();
 
-        String idValue = ElementHelper.getIdValue(keyValues)
-                .map(it -> {
-                    if (!graph.features().vertex().properties().willAllowId(it)) {
-                        throw VertexProperty.Exceptions.userSuppliedIdsOfThisTypeNotSupported();
-                    }
-                    return it.toString();
-                })
-                .orElseGet(() -> UUID.randomUUID().toString());
+        VertexProperty<?> property = property(key);
+        if (property.isPresent()) {
+            property.remove();
+        }
 
-        VertexPropertyData prop = new VertexPropertyData(idValue, value);
+        VertexPropertyData prop = new VertexPropertyData(value);
         data.add(key, prop);
+        doUpdate();
 
         ArangoDBVertexProperty<V> vertexProperty = new ArangoDBVertexProperty<>(key, prop, this);
-        // TODO: optimize writing only once
         ElementHelper.attachProperties(vertexProperty, keyValues);
-        doUpdate();
         return vertexProperty;
     }
 
@@ -91,7 +88,6 @@ public class ArangoDBVertex extends ArangoDBElement<VertexPropertyData, VertexDa
             throw new IllegalArgumentException(String.format("Edge collection (%s) not in graph (%s).", edge.collection(), graph.name()));
         }
 
-        // TODO: optimize writing only once
         edge.doInsert();
         ElementHelper.attachProperties(edge, keyValues);
         return edge;
@@ -154,7 +150,7 @@ public class ArangoDBVertex extends ArangoDBElement<VertexPropertyData, VertexDa
 
     @Override
     public <V> VertexProperty<V> property(final String key, final V value) {
-        return Vertex.super.property(key, value);
+        return property(VertexProperty.Cardinality.single, key, value);
     }
 
     @Override
@@ -164,7 +160,7 @@ public class ArangoDBVertex extends ArangoDBElement<VertexPropertyData, VertexDa
 
     void removeProperty(ArangoDBVertexProperty<?> prop) {
         if (removed()) throw ArangoDBElement.Exceptions.elementAlreadyRemoved(id());
-        data.remove(prop.key(), prop.data());
+        data.remove(prop.key());
         doUpdate();
     }
 

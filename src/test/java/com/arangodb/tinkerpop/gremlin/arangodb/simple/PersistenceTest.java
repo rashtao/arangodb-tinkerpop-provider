@@ -10,7 +10,6 @@ import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.junit.Test;
 
-import java.util.List;
 import java.util.Map;
 
 import static com.arangodb.tinkerpop.gremlin.structure.ArangoDBGraph.GRAPH_VARIABLES_COLLECTION;
@@ -70,16 +69,13 @@ public class PersistenceTest extends AbstractGremlinTest {
                 .hasSize(1)
                 .containsKey("key");
 
-        List<Object> vertexProperty = (List<Object>) vertexProperties.get("key");
-        assertThat(vertexProperty).hasSize(1);
-        Map<String, Object> vertexPropertyValue = (Map<String, Object>) vertexProperty.get(0);
-        assertThat(vertexPropertyValue)
-                .hasSize(3)
-                .containsKey("id")
+        Map<String, Object> vertexProperty = (Map<String, Object>) vertexProperties.get("key");
+        assertThat(vertexProperty)
+                .hasSize(2)
                 .containsEntry("value", "value")
                 .containsKey("properties");
 
-        Map<String, Object> metaProperties = (Map<String, Object>) vertexPropertyValue.get("properties");
+        Map<String, Object> metaProperties = (Map<String, Object>) vertexProperty.get("properties");
         assertThat(metaProperties)
                 .hasSize(1)
                 .containsEntry("meta", "metaValue");

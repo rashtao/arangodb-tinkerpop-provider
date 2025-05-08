@@ -41,14 +41,6 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
         method = "*",
         reason = "tested with simple graph only")
 @Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MergeVertexTest$Traversals",
-        method = "g_withSideEffectXc_label_person_name_markoX_withSideEffectXm_age_19X_mergeVXselectXcXX_optionXonMatch_selectXmXX_option",
-        reason = "FIXME: DE-995")
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MergeVertexTest$Traversals",
-        method = "g_mergeVXlabel_person_name_markoX_optionXonMatch_age_19X_option",
-        reason = "FIXME: DE-995")
-@Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.OrderabilityTest$Traversals",
         method = "g_V_properties_order",
         reason = "requires numeric ids support")
@@ -76,6 +68,14 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.OrderabilityTest$Traversals",
         method = "g_V_out_out_properties_asXheadX_path_order_byXascX_selectXheadX_value",
         reason = "requires numeric ids support")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.SubgraphTest$Traversals",
+        method = "g_V_withSideEffectXsgX_repeatXbothEXcreatedX_subgraphXsgX_outVX_timesX5X_name_dedup",
+        reason = "requires VertexProperty user supplied identifiers")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.SubgraphTest$Traversals",
+        method = "g_V_withSideEffectXsgX_outEXknowsX_subgraphXsgX_name_capXsgX",
+        reason = "requires VertexProperty user supplied identifiers")
 public class ComplexTestGraph extends ArangoDBGraph {
 
     @SuppressWarnings("unused")
