@@ -14,9 +14,12 @@ import com.arangodb.tinkerpop.gremlin.PackageVersion;
 import com.arangodb.tinkerpop.gremlin.persistence.ElementId;
 import com.arangodb.tinkerpop.gremlin.persistence.ElementIdFactory;
 import com.arangodb.tinkerpop.gremlin.persistence.VariablesData;
+import com.arangodb.tinkerpop.gremlin.process.traversal.step.sideEffect.AQLStartStep;
 import com.arangodb.tinkerpop.gremlin.utils.ArangoDBUtil;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.tinkerpop.gremlin.process.computer.GraphComputer;
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.DefaultGraphTraversal;
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.structure.*;
 import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
 import org.apache.tinkerpop.gremlin.structure.util.GraphFactory;
@@ -52,7 +55,7 @@ public class ArangoDBGraph implements Graph {
         LOGGER.debug("Creating new ArangoDB Graph from configuration");
         config = new ArangoDBGraphConfig(cfg);
         idFactory = new ElementIdFactory(config);
-        client = new ArangoDBGraphClient(config, idFactory);
+        client = new ArangoDBGraphClient(config, idFactory, this);
 
         ArangoGraph graph = client.getArangoGraph();
         if (graph.exists()) {
@@ -70,8 +73,12 @@ public class ArangoDBGraph implements Graph {
         variables.updateVersion(PackageVersion.VERSION);
     }
 
-    Set<String> edgeCollections() {
+    public Set<String> edgeCollections() {
         return config.edges;
+    }
+
+    public Set<String> vertexCollections() {
+        return config.vertices;
     }
 
     public ArangoDBGraphConfig.GraphType type() {
@@ -161,6 +168,29 @@ public class ArangoDBGraph implements Graph {
     @Override
     public String toString() {
         return StringFactory.graphString(this, config.toString());
+    }
+
+    /**
+     * Execute the AQL query and get the result set as a {@link GraphTraversal}.
+     *
+     * @param query the AQL query to execute
+     * @return a fluent Gremlin traversal
+     */
+    public <S, E> GraphTraversal<S, E> aql(final String query) {
+        return aql(query, Collections.emptyMap());
+    }
+
+    /**
+     * Execute the AQL query with provided parameters and get the result set as a {@link GraphTraversal}.
+     *
+     * @param query      the AQL query to execute
+     * @param parameters the parameters of the AQL query
+     * @return a fluent Gremlin traversal
+     */
+    public <S, E> GraphTraversal<S, E> aql(final String query, final Map<String, Object> parameters) {
+        GraphTraversal.Admin<S, E> traversal = new DefaultGraphTraversal<>(this);
+        traversal.addStep(new AQLStartStep(traversal, query, client.execute(query, parameters)));
+        return traversal;
     }
 
     String getPrefixedCollectionName(String collectionName) {

@@ -35,7 +35,7 @@ public class ArangoDBEdge extends ArangoDBSimpleElement<EdgeData> implements Edg
         return new ArangoDBEdge(graph, EdgeData.of(inferredLabel, id, outVertexId, inVertexId));
     }
 
-    ArangoDBEdge(ArangoDBGraph graph, EdgeData data) {
+    public ArangoDBEdge(ArangoDBGraph graph, EdgeData data) {
         super(graph, data);
     }
 
