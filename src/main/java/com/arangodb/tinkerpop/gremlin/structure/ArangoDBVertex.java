@@ -39,7 +39,7 @@ public class ArangoDBVertex extends ArangoDBElement<VertexPropertyData, VertexDa
         return new ArangoDBVertex(graph, VertexData.of(inferredLabel, id));
     }
 
-    ArangoDBVertex(ArangoDBGraph graph, VertexData data) {
+    public ArangoDBVertex(ArangoDBGraph graph, VertexData data) {
         super(graph, data);
     }
 

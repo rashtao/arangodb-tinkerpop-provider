@@ -14,16 +14,22 @@ import java.util.stream.Collectors;
 
 import com.arangodb.*;
 import com.arangodb.entity.*;
+import com.arangodb.internal.ArangoDefaults;
+import com.arangodb.internal.serde.ContentTypeFactory;
 import com.arangodb.model.*;
+import com.arangodb.serde.jackson.JacksonMapperProvider;
 import com.arangodb.serde.jackson.JacksonSerde;
 import com.arangodb.tinkerpop.gremlin.persistence.*;
 import com.arangodb.tinkerpop.gremlin.structure.*;
+import com.arangodb.tinkerpop.gremlin.utils.AqlDeserializer;
+import com.arangodb.util.RawBytes;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalInterruptedException;
 import org.apache.tinkerpop.gremlin.structure.Direction;
+import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,15 +41,21 @@ public class ArangoDBGraphClient {
 
     protected final ArangoDBGraphConfig config;
 
-    public ArangoDBGraphClient(ArangoDBGraphConfig config, ElementIdFactory idFactory) {
+    private final AqlDeserializer aqlDeserializer;
+
+    public ArangoDBGraphClient(ArangoDBGraphConfig config, ElementIdFactory idFactory, ArangoDBGraph graph) {
         logger.debug("Initiating the ArangoDb Client");
         this.config = config;
+        Protocol protocol = config.driverConfig.getProtocol()
+                .orElse(ArangoDefaults.DEFAULT_PROTOCOL);
+        ObjectMapper mapper = JacksonMapperProvider.of(ContentTypeFactory.of(protocol))
+                .registerModule(createSerdeModule(idFactory));
+        aqlDeserializer = new AqlDeserializer(graph, mapper);
         db = new ArangoDB.Builder()
                 .loadProperties(config.driverConfig)
+                .serde(JacksonSerde.create(mapper))
                 .build()
                 .db(config.dbName);
-        ((JacksonSerde) db.getSerde().getUserSerde()).configure(mapper ->
-                mapper.registerModule(createSerdeModule(idFactory)));
     }
 
     private Module createSerdeModule(ElementIdFactory idFactory) {
@@ -184,10 +196,20 @@ public class ArangoDBGraphClient {
         return db.graph(config.graphName);
     }
 
+    public Iterator<Object> execute(final String query, final Map<String, Object> parameters) {
+        logger.debug("Executing AQL query: {}, with parameters: {}", query, parameters);
+        Iterator<RawBytes> res = executeAqlQuery(query, RawBytes.class, parameters);
+        return IteratorUtils.map(res, aqlDeserializer::deserialize);
+    }
+
     private <V> ArangoCursor<V> executeAqlQuery(String query, Class<V> type) {
+        return executeAqlQuery(query, type, null);
+    }
+
+    private <V> ArangoCursor<V> executeAqlQuery(String query, Class<V> type, Map<String, Object> parameters) {
         logger.debug("Executing AQL query: {}", query);
         try {
-            return db.query(query, type, new AqlQueryOptions().failOnWarning(true));
+            return db.query(query, type, parameters);
         } catch (ArangoDBException e) {
             logger.error("Error executing query", e);
             throw mapException(e);

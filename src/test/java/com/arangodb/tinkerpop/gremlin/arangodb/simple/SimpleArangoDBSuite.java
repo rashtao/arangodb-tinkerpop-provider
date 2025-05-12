@@ -11,6 +11,7 @@ public class SimpleArangoDBSuite extends AbstractGremlinSuite {
             SimpleElementIdTest.class,
             DataTypesTest.class,
             PersistenceTest.class,
+            AqlTest.class,
     };
 
     public SimpleArangoDBSuite(final Class<?> klass, final RunnerBuilder builder) throws InitializationError {

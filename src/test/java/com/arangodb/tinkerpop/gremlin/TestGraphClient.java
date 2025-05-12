@@ -12,7 +12,7 @@ import org.apache.commons.configuration2.Configuration;
 public class TestGraphClient extends ArangoDBGraphClient {
 
     public TestGraphClient(Configuration config) {
-        super(new ArangoDBGraphConfig(config), null);
+        super(new ArangoDBGraphConfig(config), null, null);
         if (!db.exists()) {
             db.create();
         }
